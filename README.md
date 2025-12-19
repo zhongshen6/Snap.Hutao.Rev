@@ -44,8 +44,8 @@ V6.2的元数据已在编写中
 | 新圣遗物 | / |
 | 新卡池 | ❇️ |
 | 新成就 | ✔️ |
-| 深境螺旋 | 💠 |
-| 幻想真境剧诗 | 💠 |
+| 深境螺旋 | ❌ |
+| 幻想真境剧诗 | ❌ |
 | 幽境危战 | ✔️ |
 
 ✔️：已完成  
@@ -81,30 +81,21 @@ https://deepwiki.com/DGP-Studio/Snap.Hutao.Server
 https://github.com/wangdage12/Snap.Metadata
 
 镜像：  
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/6/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/6/status?style=flat-square)
+![http://serverjp.wdg.cloudns.ch:3001/api/badge/11/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/11/status?style=flat-square)
 
-http://server.wdg.cloudns.ch:3000/wdg1122/Snap.Metadata
-
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/7/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/7/status?style=flat-square)
-
-http://serverjp.wdg.cloudns.ch:3000/wdg1122/Snap.Metadata
+http://htgit.wdg.cloudns.ch/wdg1122/Snap.Metadata
 
 ---
 
 **临时API：**  
 
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/8/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/8/status?style=flat-square)
+![http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square)
 
-http://server.wdg.cloudns.ch:5222/
+https://htserver.wdg.cloudns.ch/api/
 
-
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/9/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/9/status?style=flat-square)
-
-http://serverjp.wdg.cloudns.ch:5222/
 
 ---
 
 **临时资源站：**  
-http://server.wdg.cloudns.ch:8007/
 
-http://serverjp.wdg.cloudns.ch:8001/
+https://htserver.wdg.cloudns.ch/
