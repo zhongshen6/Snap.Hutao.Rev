@@ -25,9 +25,8 @@ Snap Hutao is an open-source Genshin Impact toolkit under MIT license, designed 
 项目启动位置已升级为 VS2026 的 slnx 格式 Snap.Hutao\src\Snap.Hutao\Snap.Hutao.slnx
 > [!WARNING]
 > 要使该项目可以长期运行，我们需要以下资源
-> 1. `src/Snap.Hutao/Snap.Hutao/Web/Hoyolab/DataSigning/SaltConstants.cs`中的新签名值
-> 2. 元数据的编写
-> 3. 图片资源
+> 1. 元数据的编写
+> 2. 图片资源
 
 V6.2的元数据已在编写中  
 测试仓库位置：http://server.wdg.cloudns.ch:3000/wdg1122/Snap.Metadata.Test  
