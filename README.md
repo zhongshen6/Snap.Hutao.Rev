@@ -25,28 +25,16 @@ Snap Hutao is an open-source Genshin Impact toolkit under MIT license, designed 
 项目启动位置已升级为 VS2026 的 slnx 格式 Snap.Hutao\src\Snap.Hutao\Snap.Hutao.slnx
 > [!WARNING]
 > 要使该项目可以长期运行，我们需要以下资源
-> 1. `src/Snap.Hutao/Snap.Hutao/Web/Hoyolab/DataSigning/SaltConstants.cs`中的新签名值
-> 2. 元数据的编写
-> 3. 图片资源
+> 1. 元数据的编写
+> 2. 图片资源
 
-V6.2的元数据已在编写中  
-测试仓库位置：http://server.wdg.cloudns.ch:3000/wdg1122/Snap.Metadata.Test  
+已同步原作者的元数据
+
 **目前元数据的编写进度：**
 
 | 项目（V6.2） | 是否完成     |
 | ----------- | ----------- |
-| 新角色的基本数据 | ✔️ |
-| 新版本角色/怪物基础数值 | ❔ |
-| 新角色的详细资料、名片等 | ❌ |
-| 新武器 | ✔️ |
-| 新材料 | ❇️ |
-| 新怪物 | ❇️ |
-| 新圣遗物 | / |
-| 新卡池 | ❇️ |
-| 新成就 | ✔️ |
-| 深境螺旋 | 💠 |
-| 幻想真境剧诗 | 💠 |
-| 幽境危战 | ✔️ |
+| 总体数据 | ✔️ |
 
 ✔️：已完成  
 ❌：未编写  
@@ -81,30 +69,21 @@ https://deepwiki.com/DGP-Studio/Snap.Hutao.Server
 https://github.com/wangdage12/Snap.Metadata
 
 镜像：  
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/6/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/6/status?style=flat-square)
+![http://serverjp.wdg.cloudns.ch:3001/api/badge/11/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/11/status?style=flat-square)
 
-http://server.wdg.cloudns.ch:3000/wdg1122/Snap.Metadata
-
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/7/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/7/status?style=flat-square)
-
-http://serverjp.wdg.cloudns.ch:3000/wdg1122/Snap.Metadata
+http://htgit.wdg.cloudns.ch/wdg1122/Snap.Metadata
 
 ---
 
 **临时API：**  
 
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/8/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/8/status?style=flat-square)
+![http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square)
 
-http://server.wdg.cloudns.ch:5222/
+https://htserver.wdg.cloudns.ch/api/
 
-
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/9/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/9/status?style=flat-square)
-
-http://serverjp.wdg.cloudns.ch:5222/
 
 ---
 
 **临时资源站：**  
-http://server.wdg.cloudns.ch:8007/
 
-http://serverjp.wdg.cloudns.ch:8001/
+https://htserver.wdg.cloudns.ch/
