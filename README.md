@@ -6,6 +6,8 @@
 
 该版本注入功能暂不可用，并且由于缺失资源和开发能力，不建议长期使用
 
+有条件的话可以加入discord服务器：https://discord.gg/ucH3mgeWpQ
+
 **English**  
 Snap Hutao is an open-source Genshin Impact toolkit under MIT license, designed for modern Windows platform to improve the gaming experience for desktop players.
 
