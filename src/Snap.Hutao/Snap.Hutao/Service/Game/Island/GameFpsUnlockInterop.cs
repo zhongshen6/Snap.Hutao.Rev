@@ -139,6 +139,13 @@ internal sealed class GameFpsUnlockInterop : IGameIslandInterop, IDisposable
                 category: "fps.unlocker",
                 level: Sentry.BreadcrumbLevel.Info);
 
+            // 构建游戏启动参数，传递给 unlockfps.exe
+            string gameArguments = BuildGameArguments(context);
+            SentrySdk.AddBreadcrumb(
+                $"Game arguments for unlocker: {gameArguments}",
+                category: "fps.unlocker",
+                level: Sentry.BreadcrumbLevel.Info);
+
             ProcessStartInfo startInfo = new()
             {
                 FileName = unlockerPath,
@@ -148,11 +155,12 @@ internal sealed class GameFpsUnlockInterop : IGameIslandInterop, IDisposable
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 WindowStyle = ProcessWindowStyle.Normal,
+                Arguments = gameArguments,
             };
 
             unlockerProcess = new Process { StartInfo = startInfo };
 
-            
+
             unlockerProcess.Start();
 
 
@@ -170,7 +178,7 @@ internal sealed class GameFpsUnlockInterop : IGameIslandInterop, IDisposable
                     }
                 }
             });
-            
+
             Task errorTask = Task.Run(async () =>
             {
                 while (!unlockerProcess.StandardError.EndOfStream)
@@ -195,6 +203,53 @@ internal sealed class GameFpsUnlockInterop : IGameIslandInterop, IDisposable
         {
             throw HutaoException.Throw($"启动FPS解锁器失败: {ex.Message}", ex);
         }
+    }
+
+    private string BuildGameArguments(BeforeLaunchExecutionContext context)
+    {
+        LaunchOptions launchOptions = context.LaunchOptions;
+
+        if (!launchOptions.AreCommandLineArgumentsEnabled.Value)
+        {
+            return string.Empty;
+        }
+
+        StringBuilder arguments = new();
+
+        // 构建与 GameProcessFactory.CreateForDefault 相同的命令行参数
+        if (launchOptions.IsBorderless.Value)
+        {
+            arguments.Append(" -popupwindow");
+        }
+
+        if (launchOptions.IsExclusive.Value)
+        {
+            arguments.Append(" -window-mode exclusive");
+        }
+
+        arguments.Append($" -screen-fullscreen {(launchOptions.IsFullScreen.Value ? "1" : "0")}");
+
+        if (launchOptions.IsScreenWidthEnabled.Value)
+        {
+            arguments.Append($" -screen-width {launchOptions.ScreenWidth.Value}");
+        }
+
+        if (launchOptions.IsScreenHeightEnabled.Value)
+        {
+            arguments.Append($" -screen-height {launchOptions.ScreenHeight.Value}");
+        }
+
+        if (launchOptions.IsMonitorEnabled.Value)
+        {
+            arguments.Append($" -monitor {launchOptions.Monitor.Value?.Value ?? 1}");
+        }
+
+        if (launchOptions.IsPlatformTypeEnabled.Value)
+        {
+            arguments.Append($" -platform_type {launchOptions.PlatformType.Value:G}");
+        }
+
+        return arguments.ToString();
     }
 
     private async ValueTask MonitorExistingUnlockerAsync(LaunchExecutionContext context, CancellationToken token)
