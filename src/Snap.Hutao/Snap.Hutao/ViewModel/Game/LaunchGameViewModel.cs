@@ -16,11 +16,13 @@ using Snap.Hutao.Service.Game.PathAbstraction;
 using Snap.Hutao.Service.Game.Scheme;
 using Snap.Hutao.Service.Navigation;
 using Snap.Hutao.Service.Notification;
+using Snap.Hutao.Service.ThirdPartyTool;
 using Snap.Hutao.Service.User;
 using Snap.Hutao.UI.Input.LowLevel;
 using Snap.Hutao.UI.Xaml.View.Dialog;
 using Snap.Hutao.UI.Xaml.View.Window;
 using Snap.Hutao.ViewModel.User;
+using Snap.Hutao.Web.ThirdPartyTool;
 using System.Collections.Immutable;
 using System.IO;
 
@@ -53,6 +55,9 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
     public partial LaunchGameShared Shared { get; }
 
     public ImmutableArray<LaunchScheme> KnownSchemes { get; } = KnownLaunchSchemes.Values;
+
+    private IObservableProperty<ImmutableArray<ToolInfo>> thirdPartyToolsField = new ObservableProperty<ImmutableArray<ToolInfo>>(ImmutableArray<ToolInfo>.Empty);
+    public IObservableProperty<ImmutableArray<ToolInfo>> ThirdPartyTools { get => thirdPartyToolsField; }
 
     LaunchScheme? IViewModelSupportLaunchExecution.TargetScheme { get => TargetSchemeFilteredGameAccountsView.Scheme; }
 
@@ -123,6 +128,20 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
 
         await HandleGamePathEntryChangeAsync().ConfigureAwait(false);
         Shared.ResumeLaunchExecutionAsync(this).SafeForget();
+
+        // 初始化第三方工具列表
+        try
+        {
+            ImmutableArray<ToolInfo> tools = await InitializeThirdPartyToolsAsync().ConfigureAwait(false);
+            SentrySdk.AddBreadcrumb($"Initialized {tools.Length} third party tools", category: "ThirdPartyTool");
+            thirdPartyToolsField.Value = tools;
+        }
+        catch (Exception ex)
+        {
+            SentrySdk.AddBreadcrumb($"Failed to initialize third party tools: {ex.Message}", category: "ThirdPartyTool");
+            SentrySdk.CaptureException(ex);
+        }
+
         return true;
     }
 
@@ -301,5 +320,41 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
         }
 
         await GameLifeCycle.TryKillGameProcessAsync(taskContext).ConfigureAwait(false);
+    }
+
+    [Command("ShowThirdPartyToolDialogCommand")]
+    private async Task ShowThirdPartyToolDialogAsync(ToolInfo tool)
+    {
+        SentrySdk.AddBreadcrumb(BreadcrumbFactory.CreateUI("Show third party tool dialog", "LaunchGameViewModel.Command"));
+
+        using (IServiceScope scope = serviceProvider.CreateScope())
+        {
+            ThirdPartyToolDialog dialog = await scope.ServiceProvider
+                .GetRequiredService<IContentDialogFactory>()
+                .CreateInstanceAsync<ThirdPartyToolDialog>(scope.ServiceProvider, tool);
+
+            await dialog.ShowAsync();
+        }
+    }
+
+    private async ValueTask<ImmutableArray<ToolInfo>> InitializeThirdPartyToolsAsync()
+    {
+        try
+        {
+            SentrySdk.AddBreadcrumb("Starting to initialize third party tools", category: "ThirdPartyTool");
+            IThirdPartyToolService thirdPartyToolService = serviceProvider.GetRequiredService<IThirdPartyToolService>();
+            SentrySdk.AddBreadcrumb("Got IThirdPartyToolService instance", category: "ThirdPartyTool");
+            
+            ImmutableArray<ToolInfo> tools = await thirdPartyToolService.GetToolsAsync().ConfigureAwait(false);
+            SentrySdk.AddBreadcrumb($"Got {tools.Length} tools from service", category: "ThirdPartyTool");
+            
+            return tools;
+        }
+        catch (Exception ex)
+        {
+            SentrySdk.AddBreadcrumb($"Failed to initialize third party tools: {ex.Message}", category: "ThirdPartyTool");
+            SentrySdk.CaptureException(ex);
+            return ImmutableArray<ToolInfo>.Empty;
+        }
     }
 }

@@ -1,5 +1,6 @@
 <shuxc:ScopedPage
     x:Class="Snap.Hutao.UI.Xaml.View.Page.LaunchGamePage"
+    x:Name="PageRoot"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:cw="using:CommunityToolkit.WinUI"
@@ -11,6 +12,7 @@
     xmlns:shsg="using:Snap.Hutao.Service.Game"
     xmlns:shsgp="using:Snap.Hutao.Service.Game.PathAbstraction"
     xmlns:shux="using:Snap.Hutao.UI.Xaml"
+    xmlns:shwt="using:Snap.Hutao.Web.ThirdPartyTool"
     xmlns:shuxb="using:Snap.Hutao.UI.Xaml.Behavior"
     xmlns:shuxba="using:Snap.Hutao.UI.Xaml.Behavior.Action"
     xmlns:shuxc="using:Snap.Hutao.UI.Xaml.Control"
@@ -558,13 +560,49 @@
                     Margin="16"
                     Padding="0"
                     cw:Effects.Shadow="{ThemeResource CompatCardShadow}">
-                    <Grid Style="{ThemeResource AcrylicGridCardStyle}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition/>
-                        </Grid.RowDefinitions>
+                    <StackPanel Spacing="8">
+                        <!-- 第三方注入工具 -->
+                        <Grid Style="{ThemeResource AcrylicGridCardStyle}" Visibility="{Binding ThirdPartyTools.Value, Converter={StaticResource EmptyCollectionToVisibilityConverter}}">
+                            <Grid Padding="16,12" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    Grid.Column="0"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                                    Text="{shuxm:ResourceString Name=ViewPageLaunchGameThirdPartyTools}"/>
+                                <ItemsControl
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Left"
+                                    ItemsSource="{Binding ThirdPartyTools.Value, Mode=OneWay}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="8"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="shwt:ToolInfo">
+                                            <Button
+                                                Padding="12,6"
+                                                Command="{Binding DataContext.ShowThirdPartyToolDialogCommand, ElementName=PageRoot}"
+                                                CommandParameter="{Binding}"
+                                                Content="{Binding Name}"
+                                                Style="{ThemeResource AccentButtonStyle}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </Grid>
+
+                        <Grid Style="{ThemeResource AcrylicGridCardStyle}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
                         <Grid
                             Grid.Row="0"
                             Padding="16,8"
@@ -923,6 +961,7 @@
                             </ContentControl>
                         </ScrollViewer>
                     </Grid>
+                    </StackPanel>
                 </Border>
             </PivotItem>
         </Pivot>
