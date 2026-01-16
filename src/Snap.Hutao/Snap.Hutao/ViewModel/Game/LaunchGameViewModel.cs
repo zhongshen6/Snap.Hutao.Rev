@@ -1,4 +1,5 @@
 // Copyright (c) DGP Studio. All rights reserved.
+// Copyright (c) Millennium-Science-Technology-R-D-Inst. All rights reserved.
 // Licensed under the MIT license.
 
 using Snap.Hutao.Core.ExceptionService;
@@ -129,12 +130,39 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
         await HandleGamePathEntryChangeAsync().ConfigureAwait(false);
         Shared.ResumeLaunchExecutionAsync(this).SafeForget();
 
-        // 初始化第三方工具列表
+        // 初始化第三方工具列表（不阻塞页面加载）
+        _ = InitializeThirdPartyToolsInBackgroundAsync(token);
+
+        return true;
+    }
+
+    private async Task InitializeThirdPartyToolsInBackgroundAsync(CancellationToken token)
+    {
         try
         {
-            ImmutableArray<ToolInfo> tools = await InitializeThirdPartyToolsAsync().ConfigureAwait(false);
-            SentrySdk.AddBreadcrumb($"Initialized {tools.Length} third party tools", category: "ThirdPartyTool");
-            thirdPartyToolsField.Value = tools;
+            // Yield to let navigation/UI finish first.
+            await Task.Yield();
+
+            if (token.IsCancellationRequested || IsViewUnloaded.Value)
+            {
+                return;
+            }
+
+            ImmutableArray<ToolInfo> tools = await InitializeThirdPartyToolsAsync(token).ConfigureAwait(false);
+
+            if (token.IsCancellationRequested || IsViewUnloaded.Value)
+            {
+                return;
+            }
+
+            await taskContext.SwitchToMainThreadAsync();
+            if (!token.IsCancellationRequested && !IsViewUnloaded.Value)
+            {
+                thirdPartyToolsField.Value = tools;
+            }
+        }
+        catch (OperationCanceledException)
+        {
         }
         catch (Exception ex)
         {
@@ -142,7 +170,8 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
             SentrySdk.CaptureException(ex);
         }
 
-        return true;
+
+
     }
 
     [Command("IdentifyMonitorsCommand")]
@@ -337,18 +366,25 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
         }
     }
 
-    private async ValueTask<ImmutableArray<ToolInfo>> InitializeThirdPartyToolsAsync()
+    private async ValueTask<ImmutableArray<ToolInfo>> InitializeThirdPartyToolsAsync(CancellationToken token)
     {
         try
         {
             SentrySdk.AddBreadcrumb("Starting to initialize third party tools", category: "ThirdPartyTool");
             IThirdPartyToolService thirdPartyToolService = serviceProvider.GetRequiredService<IThirdPartyToolService>();
             SentrySdk.AddBreadcrumb("Got IThirdPartyToolService instance", category: "ThirdPartyTool");
-            
+
+            // Note: service API is not cancellable; we only honor cancellation before/after the call.
+            token.ThrowIfCancellationRequested();
             ImmutableArray<ToolInfo> tools = await thirdPartyToolService.GetToolsAsync().ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+
             SentrySdk.AddBreadcrumb($"Got {tools.Length} tools from service", category: "ThirdPartyTool");
-            
             return tools;
+        }
+        catch (OperationCanceledException)
+        {
+            return ImmutableArray<ToolInfo>.Empty;
         }
         catch (Exception ex)
         {
