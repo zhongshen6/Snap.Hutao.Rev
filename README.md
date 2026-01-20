@@ -34,7 +34,7 @@ Snap Hutao is an open-source Genshin Impact toolkit under MIT license, designed 
 
 **目前元数据的编写进度：**
 
-| 项目（V6.2） | 是否完成     |
+| 项目（V6.3） | 是否完成     |
 | ----------- | ----------- |
 | 总体数据 | ✔️ |
 
@@ -65,7 +65,8 @@ https://deepwiki.com/DGP-Studio/Snap.Hutao.Server
 > `C:\Users\<用户名>\AppData\Local\Packages\xxxDGPStudio.SnapHutao_xxx\LocalCache\ImageCache`  
 > 并将`ImageCache`文件夹提供给我，我会尽力恢复资源
 
-[服务器状态页面](http://serverjp.wdg.cloudns.ch:3001/status/hts)
+[服务器状态页面](http://serverjp.wdg.cloudns.ch:3001/status/hts)  
+如需查看服务器的性能和历史状态，点击[该链接](https://stats.uptimerobot.com/fHxWxdxK61)，然后点击每个服务的名称来查看详细信息
 
 **元数据仓库：**  
 https://github.com/wangdage12/Snap.Metadata
