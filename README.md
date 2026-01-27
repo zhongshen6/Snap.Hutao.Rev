@@ -15,8 +15,6 @@ Snap Hutao is an open-source Genshin Impact toolkit under MIT license, designed 
 
 ## 🚀 安装 / Installation
 
-> 如果你的设备不支持ipv6，请下载末尾带有`ipv4`的压缩包，正常情况下请尽量下载普通包（服务器速度快）
-
 目前 Sanp.Hutao.Rev 更新了打包方式，并采用了标准现代的 msi 安装，方便程序获取管理员权限和更多的功能设置，不再需要原 Depolyment
 
 只有`.msi`安装包安装的可以和之前的版本共存，如果通过`.msix`安装包安装则可能出现`0x80073CF3`，备份旧版本数据文件夹后卸载旧版本即可继续安装，将旧版本数据文件夹里面的文件复制到该版本的数据文件夹中即可恢复数据
@@ -56,37 +54,46 @@ https://deepwiki.com/DGP-Studio/Snap.Hutao.Server
 
 由于采用了 wix 进行打包程序，VS 需要安装 **HeatWave for VS2022**（2026兼容）。需要 msi 安装包时，右键选中 Snap.Hutao.Installer 生成后即可在目标目录找到。默认目录：Snap.Hutao.Installer\bin\x64\Release\en-US\Snap.Hutao.Installer.msi
 
-### 资源
+## 资源和服务器状态
 
-> 注意：普通包的资源服务器只能使用ipv6连接，也就是说，你的电脑必须有ipv6，并且建议你手动配置DNS为`223.5.5.5`  
-> 如果你的设备不支持ipv6，请下载末尾带有`ipv4`的压缩包  
-> 由于数据文件夹中有元数据的仓库和图片缓存，才得以恢复资源文件  
-> 如果你发现之前版本可以显示的图片不能显示了，请查找旧数据文件夹  
-> `C:\Users\<用户名>\AppData\Local\Packages\xxxDGPStudio.SnapHutao_xxx\LocalCache\ImageCache`  
-> 并将`ImageCache`文件夹提供给我，我会尽力恢复资源
 
-[服务器状态页面](http://serverjp.wdg.cloudns.ch:3001/status/hts)  
-如需查看服务器的性能和历史状态，点击[该链接](https://stats.uptimerobot.com/fHxWxdxK61)，然后点击每个服务的名称来查看详细信息
+<a href="https://uptimerobot.com" target="_blank" rel="noopener">
+<picture>
+  <source media="(prefers-color-scheme: dark)"
+          srcset="https://raw.githubusercontent.com/wangdage12/wangdage12/main/assets/uptimerobot-logo.svg">
+  <img alt="logo"
+       src="https://raw.githubusercontent.com/wangdage12/wangdage12/main/assets/uptimerobot-logo-dark.svg" width="300">
+</picture>
+</a>
+
+我们将使用[UptimeRobot](https://uptimerobot.com)赞助的监控服务作为新的服务器状态页面，它有更多的功能
+
+[新服务器状态页面](https://stats.uptimerobot.com/fHxWxdxK61)  
+
+[旧服务器状态页面](http://serverjp.wdg.cloudns.ch:3001/status/hts)
+
+---
 
 **元数据仓库：**  
 https://github.com/wangdage12/Snap.Metadata
 
-镜像：  
+仓库镜像：  
 ![http://serverjp.wdg.cloudns.ch:3001/api/badge/11/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/11/status?style=flat-square)
 
 http://htgit.wdg.cloudns.ch/wdg1122/Snap.Metadata
 
 ---
 
-**临时API：**  
+**API：**  
 
 ![http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square)
 
 https://htserver.wdg.cloudns.ch/api/
 
+*API是开源的，你也可以自己部署：https://github.com/wangdage12/Snap.Server*
 
 ---
 
-**临时资源站：**  
+**图片资源站：**  
 
 https://htserver.wdg.cloudns.ch/
