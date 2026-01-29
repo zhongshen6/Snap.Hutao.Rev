@@ -4,7 +4,7 @@
 **中文**  
 胡桃工具箱是一款以 MIT 协议开源的原神工具箱，专为现代化 Windows 平台设计，旨在改善桌面端玩家的游戏体验。
 
-该版本注入功能暂不可用，并且由于缺失资源和开发能力，不建议长期使用
+自带的注入功能只有FPS调整，只保证FPS调整长期可用，你可以使用`注入选项`下方的第三方工具来使用更多功能，本项目提供的所有注入功能都不会影响游戏的公平性。
 
 有条件的话可以加入discord服务器：https://discord.gg/ucH3mgeWpQ
 
@@ -50,6 +50,13 @@ Snap Hutao is an open-source Genshin Impact toolkit under MIT license, designed 
 https://deepwiki.com/DGP-Studio/Snap.Hutao
 
 https://deepwiki.com/DGP-Studio/Snap.Hutao.Server
+
+**该项目所需的其他仓库，欢迎贡献或者自部署**
+
+- 元数据：[Snap.Metadata](https://github.com/wangdage12/Snap.Metadata)
+- 服务端：[Snap.Server](https://github.com/wangdage12/Snap.Server)
+- Web管理后台和官网：[Snap.Server.Web](https://github.com/wangdage12/Snap.Server.Web)
+
 ## 打包测试
 
 由于采用了 wix 进行打包程序，VS 需要安装 **HeatWave for VS2022**（2026兼容）。需要 msi 安装包时，右键选中 Snap.Hutao.Installer 生成后即可在目标目录找到。默认目录：Snap.Hutao.Installer\bin\x64\Release\en-US\Snap.Hutao.Installer.msi
@@ -89,8 +96,6 @@ http://htgit.wdg.cloudns.ch/wdg1122/Snap.Metadata
 ![http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square)
 
 https://htserver.wdg.cloudns.ch/api/
-
-*API是开源的，你也可以自己部署：https://github.com/wangdage12/Snap.Server*
 
 ---
 
