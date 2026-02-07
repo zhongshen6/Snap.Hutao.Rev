@@ -20,6 +20,8 @@ internal partial class ScopedPage : Page
 
     protected ScopedPage()
     {
+        // Allow a small set of recent pages to be cached to reduce navigation stutter.
+        NavigationCacheMode = NavigationCacheMode.Enabled;
         // Events/Override Methods order
         // ----------------------------------------------------------------------
         // Page Navigation methods:
@@ -103,6 +105,13 @@ internal partial class ScopedPage : Page
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        // When navigation cache is enabled, the page instance is reused.
+        // Do not tear down DataContext/scope here to avoid invalid state on return.
+        if (NavigationCacheMode != NavigationCacheMode.Disabled)
+        {
+            return;
+        }
+
         // Cancel all tasks executed by the view model
         viewCts.Cancel();
 
