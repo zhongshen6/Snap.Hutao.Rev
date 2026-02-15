@@ -11,7 +11,7 @@
     <UseWinUI>true</UseWinUI>
     <UseWPF>False</UseWPF>
 	<!-- 配置版本号 -->
-	<Version>1.18.3.0</Version>
+	<Version>1.18.4.0</Version>
 	 
     <UseWindowsForms>False</UseWindowsForms>
     <ImplicitUsings>False</ImplicitUsings>
@@ -78,6 +78,15 @@
     </ItemGroup>
     <Copy SourceFiles="@(UnlockFpsExeSource)" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
   </Target>
+
+  <!-- 声明unlockfps.exe为项目内容，确保MSIX打包时包含此文件 -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\bin\unlockfps.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <PackagePath>unlockfps.exe</PackagePath>
+    </Content>
+  </ItemGroup>
 
   <!-- Analyzer Files -->
   <ItemGroup>
