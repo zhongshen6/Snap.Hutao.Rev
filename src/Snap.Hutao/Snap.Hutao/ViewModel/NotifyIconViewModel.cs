@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.Windows.AppNotifications.Builder;
 using Snap.Hutao.Core;
+using Snap.Hutao.Core.ApplicationModel;
 using Snap.Hutao.Core.LifeCycle;
 using Snap.Hutao.Core.Logging;
 using Snap.Hutao.Factory.Process;
@@ -52,7 +53,10 @@ internal sealed partial class NotifyIconViewModel : ObservableObject
 
         try
         {
-            ProcessFactory.StartUsingShellExecuteRunAs($"shell:AppsFolder\\{HutaoRuntime.FamilyName}!App");
+            string launchTarget = PackageIdentityAdapter.HasPackageIdentity
+                ? $"shell:AppsFolder\\{HutaoRuntime.FamilyName}!App"
+                : InstalledLocation.GetAbsolutePath("Snap.Hutao.exe");
+            ProcessFactory.StartUsingShellExecuteRunAs(launchTarget);
         }
         catch (Win32Exception ex)
         {
