@@ -1,0 +1,13 @@
+namespace App6
+{
+	[default_interface]
+	runtimeclass SettingsViewModel : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+	{
+		SettingsViewModel();
+		Boolean StealthMode;
+		Boolean RestrictedTokens;
+		Boolean LangOverride;
+		String GamePath;
+	}
+
+}

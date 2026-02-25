@@ -1,0 +1,38 @@
+{
+
+    "source": "https://example.com/toolkit.Install.exe",
+
+    "appName": "sigewinne toolkit",
+
+    "publisher": "sigewinne toolkit",
+
+    "regName": "sigewinne toolkit",
+
+    "exeName": "toolkit.exe",
+
+    "uninstallName": "toolkit.uninst.exe",
+
+    "updaterName": "toolkit.update.exe",
+
+    "programFilesPath": "toolkit",
+
+    "title": "sigewinne toolkit",
+
+    "description": "v6.4b0",
+
+    "windowBorderless": true,
+
+    "windowTitle": "sigewinne toolkit installer",
+
+    "userDataPath": ["${INSTALL_PATH}/User"],
+
+    "ignoreFolderPath": ["${INSTALL_PATH}/cache"],
+
+    "extraUninstallPath": ["${INSTALL_PATH}/log"],
+
+    "uacStrategy": "prefer-admin",
+
+    "runtimes": [
+
+    ]
+}

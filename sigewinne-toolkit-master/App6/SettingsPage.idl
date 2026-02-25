@@ -1,0 +1,12 @@
+import "SettingsViewModel.idl";
+namespace App6
+{
+    [default_interface]
+    runtimeclass SettingsPage : Microsoft.UI.Xaml.Controls.Page
+    {
+        
+        SettingsPage();
+        SettingsViewModel ViewModel{ get; };
+    }
+
+}
