@@ -8,8 +8,10 @@
 
 这个项目对 `nvd3dump.dll` 的使用，不是“调用 DLL 导出函数”，而是两段式：
 
-1. **启动时注入 DLL**（`CreateProcessW(CREATE_SUSPENDED)` + 远程 `LoadLibraryW`）。
-2. **通过共享内存实时传参**（命名 `FileMapping` + 结构体字段开关），让 DLL 在目标进程内读取并生效。
+1. **启动时注入 DLL**：
+   - 直接注入路径：`CreateProcessW(CREATE_SUSPENDED)` + 远程 `LoadLibraryW`（本文示例与最小注入器使用该路径）。
+   - `sigewinne` 路径：先拉起 `toolkit_fulltrust.exe`，再由其内部完成后续动作（该 EXE 在本仓库中无源码）。
+2. **通过共享内存实时传参**（命名 `FileMapping` + 结构体字段/位字段开关），让 DLL 在目标进程内读取并生效。
 
 所以你真正要复刻的是：
 
@@ -22,15 +24,12 @@
 
 ### 1.1 注入证据（启动链路）
 
-`LaunchGameImpl()` 明确执行了典型远程注入流程：
+注入链路在不同版本中有两种实现：
 
-- 挂起启动游戏；
-- 拼接 `nvd3dump.dll` 路径；
-- `VirtualAllocEx` + `WriteProcessMemory` 写 DLL 路径；
-- `CreateRemoteThread` 调 `LoadLibraryW`；
-- 等待完成后恢复线程。 
+- **直接注入实现**（本文示例/最小注入器）：`CreateProcessW(CREATE_SUSPENDED)` + 远程 `LoadLibraryW`。
+- **`sigewinne` 启动器实现**：`LaunchGameImpl()` 启动 `toolkit_fulltrust.exe`，注入细节被封装在外部组件内。
 
-这说明 DLL 被当成“加载后自运行模块”使用，而非显式 API SDK。 
+这说明 DLL 仍被当成“加载后自运行模块”使用，而非显式 API SDK。 
 
 ### 1.2 协议证据（运行时控制）
 
@@ -62,37 +61,41 @@
 
 ## 3. `IslandEnvironment` 协议全字段（即 DLL 可见的功能入口）
 
-结构体如下（按项目定义）：
+结构体如下（`sigewinne` 当前协议）：
 
 ```cpp
 struct IslandEnvironment
 {
     CHAR  Reserved[76];
-    BOOL  EnableSetFieldOfView;
-    FLOAT FieldOfView;
-    BOOL  FixLowFovScene;
-    BOOL  DisableFog;
-    BOOL  EnableSetTargetFrameRate;
+    float FieldOfView;
     DWORD TargetFrameRate;
-    BOOL  RemoveOpenTeamProgress;
-    BOOL  HideQuestBanner;
-    BOOL  DisableEventCameraMove;
-    BOOL  DisableShowDamageText;
-    BOOL  UsingTouchScreen;
-    BOOL  RedirectCombineEntry;
-    BOOL  ResinListItemId000106Allowed;
-    BOOL  ResinListItemId000201Allowed;
-    BOOL  ResinListItemId107009Allowed;
-    BOOL  ResinListItemId107012Allowed;
-    BOOL  ResinListItemId220007Allowed;
-    BOOL  HideUid;
+    uint32_t EnableSetFieldOfView : 1;
+    uint32_t FixLowFovScene : 1;
+    uint32_t DisableFog : 1;
+    uint32_t EnableSetTargetFrameRate : 1;
+    uint32_t RemoveOpenTeamProgress : 1;
+    uint32_t HideQuestBanner : 1;
+    uint32_t DisableEventCameraMove : 1;
+    uint32_t DisableShowDamageText : 1;
+    uint32_t UsingTouchScreen : 1;
+    uint32_t RedirectCombineEntry : 1;
+    uint32_t ResinListItemId000106Allowed : 1;
+    uint32_t ResinListItemId000201Allowed : 1;
+    uint32_t ResinListItemId107009Allowed : 1;
+    uint32_t ResinListItemId107012Allowed : 1;
+    uint32_t ResinListItemId220007Allowed : 1;
+    uint32_t HideUid : 1;
+    uint32_t ReservedBits : 16;
 };
 ```
+
+兼容说明：`Snap.Hutao-main` 主工程中仍有 `BOOL` 展开结构定义；字段语义一致，但内存布局不同。独立控制器请先确认你要兼容的版本。
 
 **重点解释：**
 
 - `Reserved[76]` 不是无意义填充。项目会把一组固定 `DWORD array[]` 拷贝到结构体头部（`memcpy(reinterpret_cast<char*>(penv), &array, sizeof(array));`），这通常用于 DLL 侧协议签名、版本/偏移指纹或校验标识。
 - 也就是说，若你外部自己实现控制器，**建议保留这段初始化行为**，不要把 `Reserved` 当垃圾字节清零后不管。
+- 若你使用 Python/C#/Rust 等不支持 C++ 位域映射的方式，需要自行把布尔开关打包为一个 `uint32 Flags`（bit0~bit15）。
 
 ---
 
@@ -115,7 +118,7 @@ struct IslandEnvironment
 | 移除打开队伍进度 | `ViewPageIslandRemoveOpenTeamProgress` | `RemoveOpenTeamProgress` | `RemoveOpenTeamProgress` | 写 `penv->RemoveOpenTeamProgress` |
 | 触屏模式 | `ViewPageIslandUsingTouchScreen` | `UsingTouchScreen` | `UsingTouchScreen` | 写 `penv->UsingTouchScreen` |
 | 隐藏 UID | `ViewPageIslandHideUid` | `HideUid` | `HideUid` | 写 `penv->HideUid` |
-| 树脂选项相关 5 项 | 对应 `ViewPageIslandResinListItem...` | `ResinListItemId...Allowed` | `items` map | 该版本 UI 禁用，未实现写入 |
+| 树脂选项相关 5 项 | 对应 `ViewPageIslandResinListItem...` | `ResinListItemId...Allowed` | `items` map | `sigewinne` 页面层禁用；主工程 `Snap.Hutao-main` 已有对应选项写入 |
 
 ## 5. 两类状态：持久化设置 vs 实时环境
 
@@ -137,7 +140,7 @@ struct IslandEnvironment
 
 ---
 
-## 6. 启动与注入完整流程（可以原样复刻）
+## 6. 启动与注入完整流程（直接注入路径，可原样复刻）
 
 1. 获取目标游戏命令行（可附参数）。
 2. `CreateProcessW(..., CREATE_SUSPENDED, ...)`。
@@ -152,6 +155,8 @@ struct IslandEnvironment
 11. `ResumeThread`。
 
 这就是本项目的“DLL 注入全部流程”。
+
+补充：`sigewinne` 当前启动器会先启动 `toolkit_fulltrust.exe`，这是另一条封装链路；如果你要做独立最小运行器，直接注入路径仍可用。
 
 ---
 
@@ -175,7 +180,7 @@ struct IslandEnvironment
 - FOV / FPS 数值与开关；
 - 多个布尔功能位（雾、伤害数字、镜头、横幅、重定向等）。
 
-> 注意：当前代码中 `HideUid` 没在 `init_environment()` 的回填列表里，但 UI setter 会在用户切换时写进去。复刻时建议补上初始化回填，避免启动后首次状态不一致。
+> 更新：`sigewinne` 的 `init_environment()` 已回填 `HideUid`；5 个 `ResinListItemId...Allowed` 仍未在该函数内回填。
 
 ---
 
@@ -193,9 +198,9 @@ struct IslandEnvironment
 - DisableShowDamageText
 - UsingTouchScreen
 - RedirectCombineEntry
-- HideUid（注意初始化回填细节）
+- HideUid
 
-### B 级：UI 展示但当前版本未打通写入
+### B 级：分版本差异项
 
 - 5 个 ResinListItem 开关：
   - `ResinListItemAllowOriginalResin`
@@ -206,17 +211,17 @@ struct IslandEnvironment
 
 证据：
 
-- XAML 里这些开关 `IsEnabled="False"`；
-- 对应 getter 固定返回 `1`，setter 空实现；
-- 虽然 `IslandEnvironment` 中存在对应字段，当前页面逻辑并未写它们。
+- `sigewinne`：XAML 里这些开关 `IsEnabled="False"`，getter 固定返回 `1`，setter 空实现。
+- `Snap.Hutao-main`：这 5 项已连接到 `LaunchOptions` 并写入 `IslandEnvironment`。
 
-结论：DLL 可能具备能力，但本仓库当前 UI 流程没有开放控制。
+结论：DLL 协议字段存在，具体是否能在 UI 控制取决于版本分支。
 
 ---
 
 ## 9. 可直接复用的“控制器级”示例（不依赖本项目 UI）
 
-下面示例展示“仅通过协议控制 DLL 功能”：
+下面示例展示“仅通过协议控制 DLL 功能”。  
+注意：该示例是 **`BOOL` 展开协议** 写法（用于旧布局兼容）；若目标是 `sigewinne` 当前位域协议，请改为 `Reserved + FieldOfView + TargetFrameRate + Flags(bitmask)` 布局。
 
 ```cpp
 #include <Windows.h>
@@ -490,14 +495,14 @@ struct IslandController {
 
 ### 17.1 `Reserved` 的真实初始化内容（完整常量表）
 
-源码中的初始化数组是确定常量，共 **19 个 `DWORD`**，值如下：
+源码中的初始化数组是确定常量，共 **19 个 `DWORD`**，`sigewinne` 版本值如下：
 
 ```cpp
 DWORD array[] = {
-    0x1560ec0, 0x15b73330, 0x106a3c0, 0x106a3b0, 0xc835b70,
-    0x608d620, 0x406330, 0x71a6ee0, 0xe47e1b0, 0xe4851e0,
-    0xfeafc10, 0x69ea500, 0x9199950, 0xa98f410, 0x1063c50,
-    0x1063450, 0xfa87490, 0x1084e9e0, 0x105c2c10
+    0x15946c0, 0x15fa41d0, 0x1097ad0, 0x1097ac0, 0xcc45b70,
+    0x61651d0, 0x417cc0, 0x74a59b0, 0xf87d050, 0xf879e20,
+    0x78ae580, 0x9d24a70, 0xefc9f90, 0x9eb61f0, 0x1091400,
+    0x1090be0, 0xfcdda80, 0x10a8d900, 0xa1eea40
 };
 ```
 
@@ -513,29 +518,20 @@ memcpy(reinterpret_cast<char*>(penv), &array, sizeof(array));
 
 ### 17.2 `sizeof` 与字段偏移（协议对齐）
 
-按当前字段定义（`BOOL/DWORD/FLOAT` 均 4 字节）可得：
+按 `sigewinne` 当前位域结构可得：
 
-- `sizeof(IslandEnvironment) = 148`
-- `offsetof(EnableSetFieldOfView) = 76`
-- `offsetof(FieldOfView) = 80`
-- `offsetof(FixLowFovScene) = 84`
-- `offsetof(DisableFog) = 88`
-- `offsetof(EnableSetTargetFrameRate) = 92`
-- `offsetof(TargetFrameRate) = 96`
-- `offsetof(RemoveOpenTeamProgress) = 100`
-- `offsetof(HideQuestBanner) = 104`
-- `offsetof(DisableEventCameraMove) = 108`
-- `offsetof(DisableShowDamageText) = 112`
-- `offsetof(UsingTouchScreen) = 116`
-- `offsetof(RedirectCombineEntry) = 120`
-- `offsetof(ResinListItemId000106Allowed) = 124`
-- `offsetof(ResinListItemId000201Allowed) = 128`
-- `offsetof(ResinListItemId107009Allowed) = 132`
-- `offsetof(ResinListItemId107012Allowed) = 136`
-- `offsetof(ResinListItemId220007Allowed) = 140`
-- `offsetof(HideUid) = 144`
+- `sizeof(IslandEnvironment) = 88`
+- `offsetof(Reserved) = 0`
+- `offsetof(FieldOfView) = 76`
+- `offsetof(TargetFrameRate) = 80`
+- `offsetof(Flags/位域存储单元) = 84`
 
-结论：`Reserved` 正好 76 字节；当前结构下无额外尾部填充超过 148 字节。
+其中 bit 分配为：
+
+- bit0~bit15：各功能位（`EnableSetFieldOfView` ... `HideUid`）
+- bit16~bit31：保留位
+
+兼容说明：`Snap.Hutao-main` 中仍存在 `BOOL` 展开结构（`sizeof = 148`）。如果你做跨版本工具，需按目标版本选择布局。
 
 ### 17.3 mapping 创建大小 `1024` 的依据
 
@@ -549,7 +545,7 @@ CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_EXECUTE_READWRITE, 0, 1024, L
 
 因此当前关系是：
 
-- `1024 > 148`，明显预留扩展空间；
+- `1024 > 88`，明显预留扩展空间；
 - 现有逻辑实际只用前 `sizeof(IslandEnvironment)` 区域。
 
 ### 17.4 `init_environment` 回填覆盖范围（精确清单）
@@ -568,10 +564,10 @@ CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_EXECUTE_READWRITE, 0, 1024, L
 - `DisableShowDamageText`
 - `UsingTouchScreen`
 - `RedirectCombineEntry`
+- `HideUid`
 
 **未在 `init_environment()` 回填的字段：**
 
-- `HideUid`
 - 5 个 `ResinListItemId...Allowed`
 
 这两类主要靠运行时 setter / 外部写入改变。
@@ -615,9 +611,12 @@ CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_EXECUTE_READWRITE, 0, 1024, L
 为了防止未来版本结构变化导致协议错位，建议你的实现里加入：
 
 ```cpp
-static_assert(sizeof(IslandEnvironment) == 148, "IslandEnvironment size changed");
-static_assert(offsetof(IslandEnvironment, EnableSetFieldOfView) == 76, "offset mismatch");
-static_assert(offsetof(IslandEnvironment, HideUid) == 144, "offset mismatch");
+// sigewinne 位域协议
+static_assert(sizeof(IslandEnvironment) == 88, "IslandEnvironment size changed");
+static_assert(offsetof(IslandEnvironment, FieldOfView) == 76, "offset mismatch");
+static_assert(offsetof(IslandEnvironment, TargetFrameRate) == 80, "offset mismatch");
+
+// 若你要兼容 BOOL 展开协议，可额外放对应断言（例如 sizeof=148）
 ```
 
 并在启动日志输出：
@@ -631,26 +630,53 @@ static_assert(offsetof(IslandEnvironment, HideUid) == 144, "offset mismatch");
 
 
 ## 19. 这是一个示例启动脚本
-import os
+
+> 为避免文档示例与仓库脚本漂移，本节内容与 `minimal_launch_inject.py` 保持同步。你可以直接运行仓库中的该文件。
+
+```python
 import ctypes
+import os
 import struct
 import tkinter as tk
-from tkinter import filedialog, messagebox
 from ctypes import wintypes
+from tkinter import filedialog, messagebox
 
 # ------------------------------
-# Constants / protocol
+# Protocol constants
 # ------------------------------
 MAPPING_NAME = "4F3E8543-40F7-4808-82DC-21E48A6037A7"
 MAPPING_SIZE = 1024
 
+# Synced from sigewinne-toolkit-master/App6/Settings.cpp
 MAGIC_DWORDS = [
-    0x1560EC0, 0x15B73330, 0x106A3C0, 0x106A3B0, 0x0C835B70,
-    0x608D620, 0x406330, 0x71A6EE0, 0xE47E1B0, 0xE4851E0,
-    0xFEAFC10, 0x69EA500, 0x9199950, 0xA98F410, 0x1063C50,
-    0x1063450, 0xFA87490, 0x1084E9E0, 0x105C2C10,
+    0x015946C0, 0x15FA41D0, 0x01097AD0, 0x01097AC0, 0x0CC45B70,
+    0x061651D0, 0x00417CC0, 0x074A59B0, 0x0F87D050, 0x0F879E20,
+    0x078AE580, 0x09D24A70, 0x0EFC9F90, 0x09EB61F0, 0x01091400,
+    0x01090BE0, 0x0FCDDA80, 0x10A8D900, 0x0A1EEA40,
 ]
 
+FLAG_BITS = {
+    "EnableSetFieldOfView": 0,
+    "FixLowFovScene": 1,
+    "DisableFog": 2,
+    "EnableSetTargetFrameRate": 3,
+    "RemoveOpenTeamProgress": 4,
+    "HideQuestBanner": 5,
+    "DisableEventCameraMove": 6,
+    "DisableShowDamageText": 7,
+    "UsingTouchScreen": 8,
+    "RedirectCombineEntry": 9,
+    "ResinListItemId000106Allowed": 10,
+    "ResinListItemId000201Allowed": 11,
+    "ResinListItemId107009Allowed": 12,
+    "ResinListItemId107012Allowed": 13,
+    "ResinListItemId220007Allowed": 14,
+    "HideUid": 15,
+}
+
+# ------------------------------
+# Win32 constants
+# ------------------------------
 CREATE_SUSPENDED = 0x00000004
 MEM_COMMIT = 0x00001000
 MEM_RESERVE = 0x00002000
@@ -700,27 +726,13 @@ class PROCESS_INFORMATION(ctypes.Structure):
     ]
 
 
+# New protocol layout used by sigewinne: 76-byte header + fov + fps + packed flags
 class IslandEnvironment(ctypes.Structure):
     _fields_ = [
         ("Reserved", ctypes.c_ubyte * 76),
-        ("EnableSetFieldOfView", wintypes.BOOL),
         ("FieldOfView", ctypes.c_float),
-        ("FixLowFovScene", wintypes.BOOL),
-        ("DisableFog", wintypes.BOOL),
-        ("EnableSetTargetFrameRate", wintypes.BOOL),
         ("TargetFrameRate", wintypes.DWORD),
-        ("RemoveOpenTeamProgress", wintypes.BOOL),
-        ("HideQuestBanner", wintypes.BOOL),
-        ("DisableEventCameraMove", wintypes.BOOL),
-        ("DisableShowDamageText", wintypes.BOOL),
-        ("UsingTouchScreen", wintypes.BOOL),
-        ("RedirectCombineEntry", wintypes.BOOL),
-        ("ResinListItemId000106Allowed", wintypes.BOOL),
-        ("ResinListItemId000201Allowed", wintypes.BOOL),
-        ("ResinListItemId107009Allowed", wintypes.BOOL),
-        ("ResinListItemId107012Allowed", wintypes.BOOL),
-        ("ResinListItemId220007Allowed", wintypes.BOOL),
-        ("HideUid", wintypes.BOOL),
+        ("Flags", wintypes.DWORD),
     ]
 
 
@@ -770,17 +782,17 @@ def ensure(ok: bool, step: str):
 class Nvd3UI:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("nvd3dump 全功能控制器")
-        self.root.geometry("900x760")
+        self.root.title("nvd3dump minimal injector (sigewinne protocol)")
+        self.root.geometry("920x760")
 
         self.h_map = None
         self.view = None
-        self.env = None
+        self.env_ptr = None
 
         self.game_path_var = tk.StringVar()
         self.dll_path_var = tk.StringVar(value=os.path.abspath("nvd3dump.dll"))
 
-        self.bools = {
+        self.flag_vars = {
             "EnableSetFieldOfView": tk.BooleanVar(value=False),
             "FixLowFovScene": tk.BooleanVar(value=False),
             "DisableFog": tk.BooleanVar(value=False),
@@ -791,11 +803,11 @@ class Nvd3UI:
             "DisableShowDamageText": tk.BooleanVar(value=False),
             "UsingTouchScreen": tk.BooleanVar(value=False),
             "RedirectCombineEntry": tk.BooleanVar(value=False),
-            "ResinListItemId000106Allowed": tk.BooleanVar(value=False),
-            "ResinListItemId000201Allowed": tk.BooleanVar(value=False),
-            "ResinListItemId107009Allowed": tk.BooleanVar(value=False),
-            "ResinListItemId107012Allowed": tk.BooleanVar(value=False),
-            "ResinListItemId220007Allowed": tk.BooleanVar(value=False),
+            "ResinListItemId000106Allowed": tk.BooleanVar(value=True),
+            "ResinListItemId000201Allowed": tk.BooleanVar(value=True),
+            "ResinListItemId107009Allowed": tk.BooleanVar(value=True),
+            "ResinListItemId107012Allowed": tk.BooleanVar(value=True),
+            "ResinListItemId220007Allowed": tk.BooleanVar(value=True),
             "HideUid": tk.BooleanVar(value=False),
         }
 
@@ -805,41 +817,45 @@ class Nvd3UI:
         self._build_ui()
 
     def _build_ui(self):
-        top = tk.LabelFrame(self.root, text="路径")
+        top = tk.LabelFrame(self.root, text="Paths")
         top.pack(fill="x", padx=8, pady=6)
 
-        tk.Label(top, text="游戏 EXE").grid(row=0, column=0, sticky="w")
-        tk.Entry(top, textvariable=self.game_path_var, width=90).grid(row=0, column=1, padx=6)
-        tk.Button(top, text="选择", command=self.pick_game).grid(row=0, column=2)
+        tk.Label(top, text="Game EXE").grid(row=0, column=0, sticky="w")
+        tk.Entry(top, textvariable=self.game_path_var, width=92).grid(row=0, column=1, padx=6)
+        tk.Button(top, text="Browse", command=self.pick_game).grid(row=0, column=2)
 
         tk.Label(top, text="nvd3dump.dll").grid(row=1, column=0, sticky="w")
-        tk.Entry(top, textvariable=self.dll_path_var, width=90).grid(row=1, column=1, padx=6)
-        tk.Button(top, text="选择", command=self.pick_dll).grid(row=1, column=2)
+        tk.Entry(top, textvariable=self.dll_path_var, width=92).grid(row=1, column=1, padx=6)
+        tk.Button(top, text="Browse", command=self.pick_dll).grid(row=1, column=2)
 
-        map_box = tk.LabelFrame(self.root, text="共享内存")
+        map_box = tk.LabelFrame(self.root, text="Shared Memory")
         map_box.pack(fill="x", padx=8, pady=6)
-        tk.Button(map_box, text="创建/连接 Mapping", command=self.ensure_mapping).pack(side="left", padx=5, pady=5)
-        tk.Button(map_box, text="写入 Reserved 魔数", command=self.write_reserved).pack(side="left", padx=5, pady=5)
-        tk.Button(map_box, text="应用当前全部开关", command=self.apply_all).pack(side="left", padx=5, pady=5)
+        tk.Button(map_box, text="Create/Attach Mapping", command=self.ensure_mapping).pack(side="left", padx=5, pady=5)
+        tk.Button(map_box, text="Write Reserved Signature", command=self.write_reserved).pack(side="left", padx=5, pady=5)
+        tk.Button(map_box, text="Apply All Options", command=self.apply_all).pack(side="left", padx=5, pady=5)
 
-        feature = tk.LabelFrame(self.root, text="DLL 全部可控功能")
+        feature = tk.LabelFrame(self.root, text="Flags (bit-packed)")
         feature.pack(fill="both", expand=True, padx=8, pady=6)
 
         row = 0
-        for key in self.bools:
-            tk.Checkbutton(feature, text=key, variable=self.bools[key]).grid(row=row // 2, column=(row % 2), sticky="w", padx=8, pady=2)
+        for key in self.flag_vars:
+            tk.Checkbutton(
+                feature,
+                text=f"{key} (bit {FLAG_BITS[key]})",
+                variable=self.flag_vars[key],
+            ).grid(row=row // 2, column=row % 2, sticky="w", padx=8, pady=2)
             row += 1
 
         value_box = tk.Frame(feature)
         value_box.grid(row=20, column=0, columnspan=2, sticky="w", padx=8, pady=8)
         tk.Label(value_box, text="FieldOfView").pack(side="left")
-        tk.Entry(value_box, textvariable=self.fov_var, width=8).pack(side="left", padx=4)
+        tk.Entry(value_box, textvariable=self.fov_var, width=10).pack(side="left", padx=4)
         tk.Label(value_box, text="TargetFrameRate").pack(side="left", padx=(16, 0))
-        tk.Entry(value_box, textvariable=self.fps_var, width=8).pack(side="left", padx=4)
+        tk.Entry(value_box, textvariable=self.fps_var, width=10).pack(side="left", padx=4)
 
-        actions = tk.LabelFrame(self.root, text="启动")
+        actions = tk.LabelFrame(self.root, text="Launch")
         actions.pack(fill="x", padx=8, pady=6)
-        tk.Button(actions, text="挂起启动并注入 DLL", command=self.launch_with_inject).pack(side="left", padx=5, pady=5)
+        tk.Button(actions, text="Inject DLL (CreateRemoteThread + LoadLibraryW)", command=self.launch_with_inject).pack(side="left", padx=5, pady=5)
 
         self.log = tk.Text(self.root, height=10)
         self.log.pack(fill="both", expand=False, padx=8, pady=6)
@@ -849,56 +865,77 @@ class Nvd3UI:
         self.log.see("end")
 
     def pick_game(self):
-        p = filedialog.askopenfilename(title="选择游戏 EXE", filetypes=[("Executable", "*.exe"), ("All", "*.*")])
-        if p:
-            self.game_path_var.set(p)
+        path = filedialog.askopenfilename(title="Select game EXE", filetypes=[("Executable", "*.exe"), ("All", "*.*")])
+        if path:
+            self.game_path_var.set(path)
 
     def pick_dll(self):
-        p = filedialog.askopenfilename(title="选择 nvd3dump.dll", filetypes=[("DLL", "*.dll"), ("All", "*.*")])
-        if p:
-            self.dll_path_var.set(p)
+        path = filedialog.askopenfilename(title="Select nvd3dump.dll", filetypes=[("DLL", "*.dll"), ("All", "*.*")])
+        if path:
+            self.dll_path_var.set(path)
 
     def ensure_mapping(self):
-        if self.env is not None:
-            self.logln("Mapping 已连接")
+        if self.env_ptr is not None:
+            self.logln("Mapping already attached")
             return
 
-        h = kernel32.OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE, False, MAPPING_NAME)
-        if not h:
-            h = kernel32.CreateFileMappingW(wintypes.HANDLE(-1), None, PAGE_EXECUTE_READWRITE, 0, MAPPING_SIZE, MAPPING_NAME)
-            ensure(bool(h), "CreateFileMappingW")
-            self.logln("创建新 Mapping")
-        else:
-            self.logln("连接现有 Mapping")
+        created = False
+        h_map = kernel32.OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE, False, MAPPING_NAME)
+        if not h_map:
+            h_map = kernel32.CreateFileMappingW(
+                wintypes.HANDLE(-1),
+                None,
+                PAGE_EXECUTE_READWRITE,
+                0,
+                MAPPING_SIZE,
+                MAPPING_NAME,
+            )
+            ensure(bool(h_map), "CreateFileMappingW")
+            created = True
 
-        view = kernel32.MapViewOfFile(h, FILE_MAP_ALL_ACCESS, 0, 0, 0)
+        view = kernel32.MapViewOfFile(h_map, FILE_MAP_ALL_ACCESS, 0, 0, 0)
         ensure(bool(view), "MapViewOfFile")
 
-        self.h_map = h
+        self.h_map = h_map
         self.view = view
-        self.env = ctypes.cast(view, ctypes.POINTER(IslandEnvironment)).contents
+        self.env_ptr = ctypes.cast(view, ctypes.POINTER(IslandEnvironment))
+
+        if created:
+            ctypes.memset(self.view, 0, ctypes.sizeof(IslandEnvironment))
+            self.logln("Created new mapping")
+        else:
+            self.logln("Attached existing mapping")
 
     def write_reserved(self):
         self.ensure_mapping()
         data = b"".join(struct.pack("<I", x) for x in MAGIC_DWORDS)
-        ensure(len(data) == 76, "reserved size")
+        ensure(len(data) == 76, "Reserved signature length mismatch")
         ctypes.memmove(self.view, data, 76)
-        self.logln("Reserved[76] 已写入 19 个 DWORD 魔数")
+        self.logln("Reserved[76] written with sigewinne signature")
+
+    def build_flags(self) -> int:
+        flags = 0
+        for name, bit in FLAG_BITS.items():
+            if self.flag_vars[name].get():
+                flags |= (1 << bit)
+        return flags
 
     def apply_all(self):
         try:
             self.ensure_mapping()
             self.write_reserved()
 
-            for k, v in self.bools.items():
-                setattr(self.env, k, 1 if v.get() else 0)
+            env = self.env_ptr.contents
+            env.FieldOfView = float(self.fov_var.get())
+            env.TargetFrameRate = int(self.fps_var.get())
+            env.Flags = self.build_flags()
 
-            self.env.FieldOfView = float(self.fov_var.get())
-            self.env.TargetFrameRate = int(self.fps_var.get())
-            self.logln("已写入全部 DLL 功能开关 + FOV/FPS")
-        except Exception as e:
-            self.logln(f"[ERROR] {e}")
-            messagebox.showerror("错误", str(e))
+            self.logln(
+                f"Applied environment: FOV={env.FieldOfView:.2f}, FPS={env.TargetFrameRate}, Flags=0x{env.Flags:08X}"
+            )
+        except Exception as ex:
+            self.logln(f"[ERROR] {ex}")
+            messagebox.showerror("Error", str(ex))
 
     def launch_with_inject(self):
         try:
@@ -907,9 +944,9 @@ class Nvd3UI:
             game = self.game_path_var.get().strip().strip('"')
             dll = self.dll_path_var.get().strip().strip('"')
             if not os.path.exists(game):
-                raise RuntimeError("游戏 EXE 不存在")
+                raise RuntimeError("Game EXE not found")
             if not os.path.exists(dll):
-                raise RuntimeError("DLL 不存在")
+                raise RuntimeError("DLL not found")
 
             si = STARTUPINFOW()
             si.cb = ctypes.sizeof(si)
@@ -917,8 +954,18 @@ class Nvd3UI:
 
             cmdline = ctypes.create_unicode_buffer(f'"{game}"')
             workdir = os.path.dirname(game)
-
-            ok = kernel32.CreateProcessW(None, cmdline, None, None, False, CREATE_SUSPENDED, None, workdir, ctypes.byref(si), ctypes.byref(pi))
+            ok = kernel32.CreateProcessW(
+                None,
+                cmdline,
+                None,
+                None,
+                False,
+                CREATE_SUSPENDED,
+                None,
+                workdir,
+                ctypes.byref(si),
+                ctypes.byref(pi),
+            )
             ensure(bool(ok), "CreateProcessW")
 
             remote_mem = None
@@ -927,19 +974,39 @@ class Nvd3UI:
                 path_bytes = dll.encode("utf-16le") + b"\x00\x00"
                 path_buf = ctypes.create_string_buffer(path_bytes)
 
-                remote_mem = kernel32.VirtualAllocEx(pi.hProcess, None, 4096, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)
+                remote_mem = kernel32.VirtualAllocEx(
+                    pi.hProcess,
+                    None,
+                    max(4096, len(path_bytes)),
+                    MEM_COMMIT | MEM_RESERVE,
+                    PAGE_READWRITE,
+                )
                 ensure(bool(remote_mem), "VirtualAllocEx")
 
                 written = SIZE_T(0)
-                ok = kernel32.WriteProcessMemory(pi.hProcess, remote_mem, ctypes.cast(path_buf, LPVOID), len(path_bytes), ctypes.byref(written))
+                ok = kernel32.WriteProcessMemory(
+                    pi.hProcess,
+                    remote_mem,
+                    ctypes.cast(path_buf, LPVOID),
+                    len(path_bytes),
+                    ctypes.byref(written),
+                )
                 ensure(bool(ok) and written.value == len(path_bytes), "WriteProcessMemory")
 
                 h_kernel32 = kernel32.GetModuleHandleW("kernel32.dll")
                 ensure(bool(h_kernel32), "GetModuleHandleW")
-                p_load = kernel32.GetProcAddress(h_kernel32, b"LoadLibraryW")
-                ensure(bool(p_load), "GetProcAddress")
+                p_load_library_w = kernel32.GetProcAddress(h_kernel32, b"LoadLibraryW")
+                ensure(bool(p_load_library_w), "GetProcAddress(LoadLibraryW)")
 
-                h_thread = kernel32.CreateRemoteThread(pi.hProcess, None, 0, p_load, remote_mem, 0, None)
+                h_thread = kernel32.CreateRemoteThread(
+                    pi.hProcess,
+                    None,
+                    0,
+                    p_load_library_w,
+                    remote_mem,
+                    0,
+                    None,
+                )
                 ensure(bool(h_thread), "CreateRemoteThread")
 
                 wait_result = kernel32.WaitForSingleObject(h_thread, INFINITE)
@@ -949,14 +1016,14 @@ class Nvd3UI:
                 ok = kernel32.GetExitCodeThread(h_thread, ctypes.byref(exit_code))
                 ensure(bool(ok), "GetExitCodeThread")
                 if exit_code.value == 0:
-                    raise RuntimeError("LoadLibraryW 返回 NULL，DLL 注入失败")
+                    raise RuntimeError("LoadLibraryW returned NULL")
 
-                resume = kernel32.ResumeThread(pi.hThread)
-                if resume == 0xFFFFFFFF:
+                resume_result = kernel32.ResumeThread(pi.hThread)
+                if resume_result == 0xFFFFFFFF:
                     raise RuntimeError(f"ResumeThread failed, GetLastError={get_last_error()}")
 
-                self.logln(f"注入成功，PID={pi.dwProcessId}, HMODULE=0x{exit_code.value:X}")
-                messagebox.showinfo("成功", "游戏已启动并注入成功")
+                self.logln(f"Inject success: PID={pi.dwProcessId}, HMODULE=0x{exit_code.value:08X}")
+                messagebox.showinfo("Success", "Game launched and DLL injected successfully")
             finally:
                 if h_thread:
                     kernel32.CloseHandle(h_thread)
@@ -966,14 +1033,14 @@ class Nvd3UI:
                     kernel32.CloseHandle(pi.hThread)
                 if pi.hProcess:
                     kernel32.CloseHandle(pi.hProcess)
-        except Exception as e:
-            self.logln(f"[ERROR] {e}")
-            messagebox.showerror("错误", str(e))
+        except Exception as ex:
+            self.logln(f"[ERROR] {ex}")
+            messagebox.showerror("Error", str(ex))
 
 
 def main():
     if os.name != "nt":
-        raise SystemExit("This UI script is for Windows only.")
+        raise SystemExit("Windows only")
 
     root = tk.Tk()
     app = Nvd3UI(root)
@@ -991,3 +1058,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+```

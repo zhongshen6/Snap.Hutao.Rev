@@ -1,32 +1,18 @@
 // Copyright (c) DGP Studio. All rights reserved.
 // Licensed under the MIT license.
 
-using Snap.Hutao.Win32.Foundation;
+using System.Runtime.InteropServices;
 
 namespace Snap.Hutao.Service.Game.Island;
 
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 internal unsafe struct IslandEnvironment
 {
 #pragma warning disable CS0649
-    public fixed uint Reserved[19];
+    public fixed byte Reserved[76];
 #pragma warning restore CS0649
 
-    public BOOL EnableSetFieldOfView;
     public float FieldOfView;
-    public BOOL FixLowFovScene;
-    public BOOL DisableFog;
-    public BOOL EnableSetTargetFrameRate;
-    public int TargetFrameRate;
-    public BOOL RemoveOpenTeamProgress;
-    public BOOL HideQuestBanner;
-    public BOOL DisableEventCameraMove;
-    public BOOL DisableShowDamageText;
-    public BOOL UsingTouchScreen;
-    public BOOL RedirectCombineEntry;
-    public BOOL ResinListItemId000106Allowed;
-    public BOOL ResinListItemId000201Allowed;
-    public BOOL ResinListItemId107009Allowed;
-    public BOOL ResinListItemId107012Allowed;
-    public BOOL ResinListItemId220007Allowed;
-    public BOOL HideUid;
+    public uint TargetFrameRate;
+    public uint Flags;
 }

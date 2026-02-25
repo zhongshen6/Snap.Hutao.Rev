@@ -7,9 +7,9 @@ using Snap.Hutao.Core.LifeCycle.InterProcess.FullTrust;
 using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.Process;
 using Snap.Hutao.Service.Game.Launching.Context;
-using Snap.Hutao.Win32.Foundation;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 using Windows.Devices.Input;
 
 namespace Snap.Hutao.Service.Game.Island;
@@ -25,10 +25,10 @@ internal sealed class GameIslandInterop : IGameIslandInterop
         {
             return
             [
-                0x01560EC0, 0x15B73330, 0x0106A3C0, 0x0106A3B0, 0x0C835B70,
-                0x0608D620, 0x00406330, 0x071A6EE0, 0x0E47E1B0, 0x0E4851E0,
-                0x0FEAFC10, 0x069EA500, 0x09199950, 0x0A98F410, 0x01063C50,
-                0x01063450, 0x0FA87490, 0x1084E9E0, 0x105C2C10,
+                0x015946C0, 0x15FA41D0, 0x01097AD0, 0x01097AC0, 0x0CC45B70,
+                0x061651D0, 0x00417CC0, 0x074A59B0, 0x0F87D050, 0x0F879E20,
+                0x078AE580, 0x09D24A70, 0x0EFC9F90, 0x09EB61F0, 0x01091400,
+                0x01090BE0, 0x0FCDDA80, 0x10A8D900, 0x0A1EEA40,
             ];
         }
     }
@@ -39,6 +39,7 @@ internal sealed class GameIslandInterop : IGameIslandInterop
 
     public GameIslandInterop(bool resume)
     {
+        ValidateEnvironmentLayout();
         this.resume = resume;
     }
 
@@ -137,39 +138,62 @@ internal sealed class GameIslandInterop : IGameIslandInterop
     private static unsafe void InitializeIslandEnvironment(nint handle, LaunchOptions options)
     {
         IslandEnvironment* pIslandEnvironment = (IslandEnvironment*)handle;
-        EnvironmentReservedSignature.CopyTo(new Span<uint>(pIslandEnvironment->Reserved, 19));
+        MemoryMarshal.AsBytes(EnvironmentReservedSignature).CopyTo(new Span<byte>(pIslandEnvironment->Reserved, 76));
         UpdateIslandEnvironment(handle, options);
     }
 
     private static unsafe void UpdateIslandEnvironment(nint handle, LaunchOptions options)
     {
         IslandEnvironment* pIslandEnvironment = (IslandEnvironment*)handle;
+        bool usingTouchScreen = LocalSetting.Get(SettingKeys.LaunchForceUsingTouchScreen, false)
+            ? IsIntegratedTouchPresent()
+            : options.UsingTouchScreen.Value;
 
-        pIslandEnvironment->EnableSetFieldOfView = options.IsSetFieldOfViewEnabled.Value;
         pIslandEnvironment->FieldOfView = options.TargetFov.Value;
-        pIslandEnvironment->FixLowFovScene = options.FixLowFovScene.Value;
-        pIslandEnvironment->DisableFog = options.DisableFog.Value;
-        pIslandEnvironment->EnableSetTargetFrameRate = options.IsSetTargetFrameRateEnabled.Value;
-        pIslandEnvironment->TargetFrameRate = options.TargetFps.Value;
-        pIslandEnvironment->RemoveOpenTeamProgress = options.RemoveOpenTeamProgress.Value;
-        pIslandEnvironment->HideQuestBanner = options.HideQuestBanner.Value;
-        pIslandEnvironment->DisableEventCameraMove = options.DisableEventCameraMove.Value;
-        pIslandEnvironment->DisableShowDamageText = options.DisableShowDamageText.Value;
-        pIslandEnvironment->RedirectCombineEntry = options.RedirectCombineEntry.Value;
-        pIslandEnvironment->ResinListItemId000106Allowed = options.ResinListItemId000106Allowed.Value;
-        pIslandEnvironment->ResinListItemId000201Allowed = options.ResinListItemId000201Allowed.Value;
-        pIslandEnvironment->ResinListItemId107009Allowed = options.ResinListItemId107009Allowed.Value;
-        pIslandEnvironment->ResinListItemId107012Allowed = options.ResinListItemId107012Allowed.Value;
-        pIslandEnvironment->ResinListItemId220007Allowed = options.ResinListItemId220007Allowed.Value;
-        pIslandEnvironment->HideUid = options.HideUid.Value;
+        pIslandEnvironment->TargetFrameRate = (uint)Math.Max(options.TargetFps.Value, 0);
+        pIslandEnvironment->Flags = BuildFlags(options, usingTouchScreen);
+    }
 
-        if (LocalSetting.Get(SettingKeys.LaunchForceUsingTouchScreen, false))
+    private static uint BuildFlags(LaunchOptions options, bool usingTouchScreen)
+    {
+        uint flags = 0U;
+        SetFlag(ref flags, 0, options.IsSetFieldOfViewEnabled.Value);
+        SetFlag(ref flags, 1, options.FixLowFovScene.Value);
+        SetFlag(ref flags, 2, options.DisableFog.Value);
+        SetFlag(ref flags, 3, options.IsSetTargetFrameRateEnabled.Value);
+        SetFlag(ref flags, 4, options.RemoveOpenTeamProgress.Value);
+        SetFlag(ref flags, 5, options.HideQuestBanner.Value);
+        SetFlag(ref flags, 6, options.DisableEventCameraMove.Value);
+        SetFlag(ref flags, 7, options.DisableShowDamageText.Value);
+        SetFlag(ref flags, 8, usingTouchScreen);
+        SetFlag(ref flags, 9, options.RedirectCombineEntry.Value);
+        SetFlag(ref flags, 10, options.ResinListItemId000106Allowed.Value);
+        SetFlag(ref flags, 11, options.ResinListItemId000201Allowed.Value);
+        SetFlag(ref flags, 12, options.ResinListItemId107009Allowed.Value);
+        SetFlag(ref flags, 13, options.ResinListItemId107012Allowed.Value);
+        SetFlag(ref flags, 14, options.ResinListItemId220007Allowed.Value);
+        SetFlag(ref flags, 15, options.HideUid.Value);
+        return flags;
+    }
+
+    private static void SetFlag(ref uint flags, int bit, bool value)
+    {
+        uint mask = 1U << bit;
+        if (value)
         {
-            pIslandEnvironment->UsingTouchScreen = IsIntegratedTouchPresent();
+            flags |= mask;
         }
         else
         {
-            pIslandEnvironment->UsingTouchScreen = options.UsingTouchScreen.Value;
+            flags &= ~mask;
+        }
+    }
+
+    private static unsafe void ValidateEnvironmentLayout()
+    {
+        if (sizeof(IslandEnvironment) != 88)
+        {
+            throw HutaoException.InvalidOperation($"IslandEnvironment layout mismatch, expected 88 but got {sizeof(IslandEnvironment)}");
         }
     }
 
