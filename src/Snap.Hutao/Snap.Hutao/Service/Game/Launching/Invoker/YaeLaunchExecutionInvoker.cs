@@ -1,4 +1,4 @@
-﻿// Copyright (c) DGP Studio. All rights reserved.
+// Copyright (c) DGP Studio. All rights reserved.
 // Licensed under the MIT license.
 
 using Snap.Hutao.Core.Diagnostics;
@@ -80,8 +80,7 @@ internal sealed class YaeLaunchExecutionInvoker : AbstractLaunchExecutionInvoker
             }
 
             fileSystemReference.Exchange(beforeContext.FileSystem);
-
-            // Yae 注入始终由当前启动链路创建游戏进程
+            // Yae injection always uses the current launch pipeline to create the game process.
             IProcess? process = CreateProcess(beforeContext);
 
             using (process)

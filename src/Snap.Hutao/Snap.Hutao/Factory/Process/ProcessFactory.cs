@@ -207,7 +207,8 @@ internal sealed class ProcessFactory
             // 如果失败且filename含有Snap.Hutao.Unpackaged，就直接用Snap.Hutao.exe重启
             if (fileName.Contains("Snap.Hutao.Unpackaged"))
             {
-                string unpackagedPath = InstalledLocation.GetAbsolutePath("Snap.Hutao.exe");
+                string currentDirectory = Directory.GetCurrentDirectory();
+                string unpackagedPath = Path.Combine(currentDirectory, "Snap.Hutao.exe");
                 if (File.Exists(unpackagedPath))
                 {
                     fileName = unpackagedPath;
