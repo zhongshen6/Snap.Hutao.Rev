@@ -2,7 +2,7 @@
   "retcode": 0,
   "message": "OK",
   "data": {
-    "version": "1.18.5.10",
+    "version": "1.18.6.10",
     "validation": "manual-release",
     "mirrors": [
       {
