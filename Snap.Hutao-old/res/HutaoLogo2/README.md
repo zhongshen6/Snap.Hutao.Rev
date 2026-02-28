@@ -1,1 +1,0 @@
-Copyright © 2025 DGP Studio, All Rights Reserved.

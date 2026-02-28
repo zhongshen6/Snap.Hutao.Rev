@@ -1,9 +1,0 @@
-namespace App6
-{
-    [default_interface]
-    runtimeclass MainView : Microsoft.UI.Xaml.Controls.UserControl
-    {
-        MainView();
-
-    }
-}
