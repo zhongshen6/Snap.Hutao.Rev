@@ -1598,6 +1598,9 @@
   <data name="ViewDialogThirdPartyToolLaunch" xml:space="preserve">
     <value>启动</value>
   </data>
+  <data name="ViewDialogThirdPartyToolVersion" xml:space="preserve">
+    <value>版本：</value>
+  </data>
   <data name="ViewDialogQRCodeTitle" xml:space="preserve">
     <value>使用米游社扫描二维码</value>
   </data>
