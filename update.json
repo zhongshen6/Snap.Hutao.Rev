@@ -1,0 +1,15 @@
+{
+  "retcode": 0,
+  "message": "OK",
+  "data": {
+    "version": "1.18.6.10",
+    "validation": "manual-release",
+    "mirrors": [
+      {
+        "url": "https://github.com/zhongshen6/Snap.Hutao.Rev/releases",
+        "mirror_name": "GitHub Releases",
+        "mirror_type": "Browser"
+      }
+    ]
+  }
+}
