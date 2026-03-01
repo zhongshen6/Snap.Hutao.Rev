@@ -11,9 +11,4 @@ internal sealed class HutaoEndpointsForRelease : IHutaoEndpoints
     string IInfrastructureRootAccess.Root { get => "https://htserver.wdg.cloudns.ch/api"; }
 
     string IInfrastructureRawRootAccess.RawRoot { get => "https://htserver.wdg.cloudns.ch/api"; }
-
-    public string PatchSnapHutao()
-    {
-        return "https://raw.githubusercontent.com/zhongshen6/Snap.Hutao.Rev/main/update.json";
-    }
 }
