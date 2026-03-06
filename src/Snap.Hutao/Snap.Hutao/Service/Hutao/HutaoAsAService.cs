@@ -40,7 +40,8 @@ internal sealed partial class HutaoAsAService : IHutaoAsAService
             dismissCommand = new RelayCommand<HutaoAnnouncement>(DismissAnnouncement);
 
             ApplicationDataCompositeValue excludedIds = LocalSetting.Get<ApplicationDataCompositeValue>(SettingKeys.ExcludedAnnouncementIds, []);
-            ImmutableArray<long> data = [.. excludedIds.Select(static kvp => long.Parse(kvp.Key, CultureInfo.InvariantCulture))];
+            HashSet<long> activeExcludedIds = UpdateAndGetActiveExcludedIds(excludedIds);
+            ImmutableArray<long> data = [.. activeExcludedIds];
 
             Task<ImmutableArray<HutaoAnnouncement>> upstreamTask = GetUpstreamAnnouncementArrayAsync(data, token);
             Task<ImmutableArray<HutaoAnnouncement>> customTask = GetCustomAnnouncementArrayAsync(token);
@@ -49,6 +50,7 @@ internal sealed partial class HutaoAsAService : IHutaoAsAService
             ImmutableArray<HutaoAnnouncement> upstream = await upstreamTask.ConfigureAwait(false);
             ImmutableArray<HutaoAnnouncement> custom = await customTask.ConfigureAwait(false);
             ImmutableArray<HutaoAnnouncement> merged = MergeAnnouncements(custom, upstream);
+            merged = [.. merged.Where(a => !activeExcludedIds.Contains(a.Id))];
 
             foreach (HutaoAnnouncement item in merged)
             {
@@ -59,6 +61,42 @@ internal sealed partial class HutaoAsAService : IHutaoAsAService
         }
 
         return announcements;
+    }
+
+    private static HashSet<long> UpdateAndGetActiveExcludedIds(ApplicationDataCompositeValue excludedIds)
+    {
+        HashSet<long> activeIds = [];
+        List<string> expiredKeys = [];
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        foreach ((string key, object value) in excludedIds)
+        {
+            if (!long.TryParse(key, CultureInfo.InvariantCulture, out long id))
+            {
+                expiredKeys.Add(key);
+                continue;
+            }
+
+            if (value is DateTimeOffset expiry && expiry < now)
+            {
+                expiredKeys.Add(key);
+                continue;
+            }
+
+            activeIds.Add(id);
+        }
+
+        if (expiredKeys.Count > 0)
+        {
+            foreach (string key in expiredKeys)
+            {
+                excludedIds.Remove(key);
+            }
+
+            LocalSetting.Set(SettingKeys.ExcludedAnnouncementIds, excludedIds);
+        }
+
+        return activeIds;
     }
 
     [GeneratedRegex(@"^\d+\.\d+\.\d+(?:\.\d+)?\b", RegexOptions.CultureInvariant)]
@@ -127,7 +165,12 @@ internal sealed partial class HutaoAsAService : IHutaoAsAService
             }
 
             await using Stream stream = await response.Content.ReadAsStreamAsync(source.Token).ConfigureAwait(false);
-            CustomAnnouncementResponse? customResponse = await JsonSerializer.DeserializeAsync<CustomAnnouncementResponse>(stream, cancellationToken: source.Token).ConfigureAwait(false);
+            JsonSerializerOptions options = new()
+            {
+                AllowTrailingCommas = true,
+            };
+
+            CustomAnnouncementResponse? customResponse = await JsonSerializer.DeserializeAsync<CustomAnnouncementResponse>(stream, options, source.Token).ConfigureAwait(false);
             if (customResponse is not { ReturnCode: 0, Data: { Count: > 0 } data })
             {
                 return [];
