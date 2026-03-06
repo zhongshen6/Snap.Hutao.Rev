@@ -3,7 +3,7 @@
   "message": "OK",
   "data": [
     {
-      "Id": 900005,
+      "Id": 900008,
       "Title": "1.18.5.10 已发布",
       "Content": "同步上游更新,修复了部分问题。",
       "Link": "https://github.com/zhongshen6/Snap.Hutao.Rev/releases",
