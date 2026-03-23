@@ -93,9 +93,7 @@ https://deepwiki.com/DGP-Studio/Snap.Hutao.Server
 
 我们将使用[UptimeRobot](https://uptimerobot.com)赞助的监控服务作为新的服务器状态页面，它有更多的功能
 
-[新服务器状态页面](https://stats.uptimerobot.com/fHxWxdxK61)  
-
-[旧服务器状态页面](http://serverjp.wdg.cloudns.ch:3001/status/hts)
+[服务器状态页面](https://stats.uptimerobot.com/fHxWxdxK61)  
 
 ---
 
@@ -103,15 +101,12 @@ https://deepwiki.com/DGP-Studio/Snap.Hutao.Server
 https://github.com/wangdage12/Snap.Metadata
 
 仓库镜像：  
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/11/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/11/status?style=flat-square)
 
 http://htgit.wdg.cloudns.ch/wdg1122/Snap.Metadata
 
 ---
 
 **API：**  
-
-![http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square)
 
 https://htserver.wdg.cloudns.ch/api/
 
@@ -120,3 +115,8 @@ https://htserver.wdg.cloudns.ch/api/
 **图片资源站：**  
 
 https://htserver.wdg.cloudns.ch/
+
+# 赞助
+如果你想要为我分摊经济压力，可以在下方链接中为我赞助（支持多个预设方案，你也可以在页面下方自定义金额）  
+赞助的资金将全部用于服务器、域名等，若有剩余资金将升级CDN或者服务器来提升使用体验，我们的服务是完全免费的，该赞助并不会解锁额外特权，但是>=10元时将在官网新的“赞助者页面”上添加你的信息  
+https://ifdian.net/a/wdg12
