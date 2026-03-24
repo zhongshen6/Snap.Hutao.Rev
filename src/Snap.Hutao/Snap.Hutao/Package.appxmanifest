@@ -13,7 +13,7 @@
   <Identity
     Name="60568DGPStudio.SnapHutaoRev"
     Publisher="CN=35C8E923-85DF-49A7-9172-B39DC6312C52"
-    Version="1.18.5.10" />
+    Version="1.18.6.11" />
 
   <Properties>
     <DisplayName>Snap Hutao Rev</DisplayName>
