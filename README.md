@@ -6,7 +6,7 @@
 
 自带的注入功能只有FPS调整，只保证FPS调整长期可用，你可以使用`注入选项`下方的第三方工具来使用更多功能，本项目提供的所有注入功能都不会影响游戏的公平性。
 
-官网：https://htserver.wdg.cloudns.ch/
+官网：https://htserver.wdg12.work/
 
 **该版本的特点：**  
 - 尽量保留原版功能，少重写功能，稳定性强
@@ -113,10 +113,10 @@ http://htgit.wdg.cloudns.ch/wdg1122/Snap.Metadata
 
 ![http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square](http://serverjp.wdg.cloudns.ch:3001/api/badge/10/status?style=flat-square)
 
-https://htserver.wdg.cloudns.ch/api/
+https://htserver.wdg12.work/api/
 
 ---
 
 **图片资源站：**  
 
-https://htserver.wdg.cloudns.ch/
+https://htserver.wdg12.work/

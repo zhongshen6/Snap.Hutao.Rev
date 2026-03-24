@@ -19,7 +19,7 @@ namespace Snap.Hutao.Service.ThirdPartyTool;
 [Service(ServiceLifetime.Singleton, typeof(IThirdPartyToolService))]
 internal sealed partial class ThirdPartyToolService : IThirdPartyToolService
 {
-    private const string ApiBaseUrl = "https://htserver.wdg.cloudns.ch/api";
+    private const string ApiBaseUrl = "https://htserver.wdg12.work/api";
     private const string ToolsEndpoint = "/tools";
     private const string ToolInfoFileName = "tool_info.json";
 
