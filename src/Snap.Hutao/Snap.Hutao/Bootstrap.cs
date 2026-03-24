@@ -22,6 +22,11 @@ public static partial class Bootstrap
     private static readonly ApplicationInitializationCallback AppInitializationCallback = InitializeApp;
     private static Mutex? mutex;
 
+    /// <summary>
+    /// Gets a value indicating whether console output is enabled.
+    /// </summary>
+    public static bool ConsoleEnabled { get; private set; }
+
     internal static void UseNamedPipeRedirection()
     {
         Debug.Assert(mutex is not null);
@@ -31,6 +36,19 @@ public static partial class Bootstrap
     [STAThread]
     private static void Main(string[] args)
     {
+        // Check for console flag
+        ConsoleEnabled = args.Contains("--console") || args.Contains("--debug") ||
+                         Environment.GetEnvironmentVariable("HUTAO_DEBUG") == "1";
+
+        if (ConsoleEnabled)
+        {
+            // Allocate a console window for debug output
+            HutaoNativeMethods.AllocConsole();
+            Console.WriteLine("[Bootstrap] Console allocated for debug output");
+            Console.WriteLine($"[Bootstrap] Arguments: {string.Join(" ", args)}");
+            Console.WriteLine($"[Bootstrap] Working Directory: {Environment.CurrentDirectory}");
+        }
+
         #if DEBUG
         System.Diagnostics.Debug.WriteLine("[Bootstrap.Main] Starting...");
         #endif
@@ -124,6 +142,12 @@ public static partial class Bootstrap
         #if DEBUG
         System.Diagnostics.Debug.WriteLine("[Bootstrap.Main] Exiting");
         #endif
+
+        if (ConsoleEnabled)
+        {
+            Console.WriteLine("[Bootstrap] Application exiting...");
+            HutaoNativeMethods.FreeConsole();
+        }
     }
 
     private static void InitializeApp(ApplicationInitializationCallbackParams param)

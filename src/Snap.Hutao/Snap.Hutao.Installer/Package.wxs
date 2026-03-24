@@ -31,7 +31,7 @@
         </Feature>
     </Package>
 
-    <!-- 安装目录 -->
+    <!-- 瀹夎鐩綍 -->
     <Fragment>
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="INSTALLFOLDER" Name="Snap.Hutao.Rev" />
@@ -44,7 +44,7 @@
         <StandardDirectory Id="DesktopFolder" />
     </Fragment>
 
-    <!-- 桌面快捷方式 -->
+    <!-- 妗岄潰蹇嵎鏂瑰紡 -->
     <Fragment>
         <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="*">
 
@@ -55,7 +55,7 @@
                 Target="[INSTALLFOLDER]Snap.Hutao.exe"
                 WorkingDirectory="INSTALLFOLDER" />
 
-            <!-- KeyPath 必须是 HKCU，因为快捷方式安装到用户目录 -->
+            <!-- KeyPath 蹇呴』鏄?HKCU锛屽洜涓哄揩鎹锋柟寮忓畨瑁呭埌鐢ㄦ埛鐩綍 -->
             <RegistryValue
                 Root="HKCU"
                 Key="Software\Snap.Hutao.Rev"
@@ -66,7 +66,7 @@
         </Component>
     </Fragment>
 
-    <!-- 开始菜单快捷方式 -->
+    <!-- 寮€濮嬭彍鍗曞揩鎹锋柟寮?-->
     <Fragment>
         <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder" Guid="*">
 
@@ -79,7 +79,7 @@
 
             <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall" />
 
-            <!-- KeyPath 依然必须改为 HKCU -->
+            <!-- KeyPath 渚濈劧蹇呴』鏀逛负 HKCU -->
             <RegistryValue
                 Root="HKCU"
                 Key="Software\Snap.Hutao.Rev"

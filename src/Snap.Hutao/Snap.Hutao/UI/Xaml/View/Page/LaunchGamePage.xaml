@@ -559,7 +559,7 @@
                     Margin="16"
                     Padding="0"
                     cw:Effects.Shadow="{ThemeResource CompatCardShadow}">
-                    <StackPanel Spacing="8">
+                    <Grid>
                         <!-- 注入设置 -->
                         <Grid Style="{ThemeResource AcrylicGridCardStyle}">
                             <Grid.RowDefinitions>
@@ -920,7 +920,7 @@
                             </ContentControl>
                         </ScrollViewer>
                     </Grid>
-                    </StackPanel>
+                    </Grid>
                 </Border>
             </PivotItem>
         </Pivot>

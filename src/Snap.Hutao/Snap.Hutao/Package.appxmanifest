@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -57,7 +57,7 @@
         </com:Extension>
         <uap:Extension Category="windows.protocol">
           <uap:Protocol Name="hutao">
-            <uap:DisplayName>胡桃</uap:DisplayName>
+            <uap:DisplayName>鑳℃</uap:DisplayName>
           </uap:Protocol>
         </uap:Extension>
       </Extensions>

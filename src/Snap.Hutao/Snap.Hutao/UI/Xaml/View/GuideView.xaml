@@ -268,7 +268,7 @@
                             <TextBlock>
                                 <TextBlock.Inlines>
                                     <Run Text="{shuxm:ResourceString Name=ViewGuideStepAgreementIHaveReadText}"/>
-                                    <Hyperlink NavigateUri="https://github.com/DGP-Studio/Snap.Hutao/blob/main/LICENSE">
+                                    <Hyperlink NavigateUri="https://github.com/wangdage12/Snap.Hutao/blob/main/LICENSE">
                                         <Run Text="{shuxm:ResourceString Name=ViewGuideStepAgreementOpenSourceLicense}"/>
                                     </Hyperlink>
                                 </TextBlock.Inlines>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
@@ -10,7 +10,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <UseWinUI>true</UseWinUI>
     <UseWPF>False</UseWPF>
-	<!-- 配置版本号 -->
+	<!-- 閰嶇疆鐗堟湰鍙?-->
 	<Version>1.18.5.10</Version>
 	 
     <UseWindowsForms>False</UseWindowsForms>
@@ -50,9 +50,9 @@
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <PackageCertificateKeyFile>Snap.Hutao_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-	  <!-- 关闭AppX打包 -->
+	  <!-- 鍏抽棴AppX鎵撳寘 -->
 	  <AppxPackage>false</AppxPackage>
-	  <!-- 不设置打包类型 -->
+	  <!-- 涓嶈缃墦鍖呯被鍨?-->
 	  <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
   <ItemGroup>

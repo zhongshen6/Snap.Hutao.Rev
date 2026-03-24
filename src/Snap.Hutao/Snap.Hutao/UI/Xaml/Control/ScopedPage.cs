@@ -117,10 +117,17 @@ internal partial class ScopedPage : Page
 
         if (DataContext is IViewModel viewModel)
         {
-            // Wait to ensure critical viewmodel operation is completed
-            using (viewModel.CriticalSection.Enter())
+            try
             {
-                viewModel.Uninitialize();
+                // Wait to ensure critical viewmodel operation is completed.
+                // The view model might already be disposed when window shutdown and page unload race.
+                using (viewModel.CriticalSection.Enter())
+                {
+                    viewModel.Uninitialize();
+                }
+            }
+            catch (OperationCanceledException)
+            {
             }
 
             try
