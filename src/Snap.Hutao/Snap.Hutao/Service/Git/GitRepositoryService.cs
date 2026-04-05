@@ -13,6 +13,8 @@ using Snap.Hutao.Web.Hutao.Response;
 using Snap.Hutao.Web.Response;
 using System.Collections.Immutable;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace Snap.Hutao.Service.Git;
 
@@ -69,6 +71,11 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
 
                 foreach (GitRepository info in RepositoryAffinity.Sort(infos))
                 {
+                    if (!await ProbeRepositoryAsync(activity, info).ConfigureAwait(false))
+                    {
+                        continue;
+                    }
+
                     try
                     {
                         try
@@ -105,6 +112,50 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
             await activity.NotifyAsync(taskContext).ConfigureAwait(false);
             await activity.UpdateAsync(taskContext, SH.ServiceGitRepositoryOperationFailed, false, true, false, false).ConfigureAwait(false);
             throw new GitRepositoryException(SH.ServiceGitRepositoryOperationFailed, exceptions);
+        }
+    }
+
+    private async ValueTask<bool> ProbeRepositoryAsync(BackgroundActivity.BackgroundActivity activity, GitRepository info)
+    {
+        string probeUrl = $"{info.HttpsUrl.OriginalString.TrimEnd('/')}/info/refs?service=git-upload-pack";
+        logger.LogInformation("[Metadata] Probing repository mirror: Url={Url}", probeUrl);
+        activity.Update(taskContext, $"Probe: {info.Name}", false, false, false, true);
+
+        try
+        {
+            using SocketsHttpHandler handler = new()
+            {
+                UseProxy = true,
+                Proxy = HttpProxyUsingSystemProxy.Instance,
+                ConnectTimeout = TimeSpan.FromSeconds(3),
+            };
+
+            using HttpClient client = new(handler)
+            {
+                Timeout = TimeSpan.FromSeconds(5),
+            };
+
+            using HttpRequestMessage request = new(HttpMethod.Get, probeUrl);
+            if (!string.IsNullOrEmpty(info.Token))
+            {
+                string credentials = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{info.Username}:{info.Token}"));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+            }
+
+            using HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning("[Metadata] Probe failed: Url={Url}, StatusCode={StatusCode}", probeUrl, (int)response.StatusCode);
+                return false;
+            }
+
+            logger.LogInformation("[Metadata] Probe succeeded: Url={Url}", probeUrl);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "[Metadata] Probe failed: Url={Url}", probeUrl);
+            return false;
         }
     }
 
