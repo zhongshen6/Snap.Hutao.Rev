@@ -6,19 +6,20 @@ using Snap.Hutao.Core;
 using Snap.Hutao.Core.LifeCycle;
 using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.ContentDialog;
-using Snap.Hutao.Factory.Process;
-using Snap.Hutao.Service.Hutao;
 using Snap.Hutao.Service.Notification;
 using Snap.Hutao.Web.Hutao;
-using Snap.Hutao.Web.Hutao.Response;
-using Snap.Hutao.Web.Response;
+using System.IO;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Snap.Hutao.Service.Update;
 
 [Service(ServiceLifetime.Singleton, typeof(IUpdateService))]
 internal sealed partial class UpdateService : IUpdateService
 {
-    private const string UpdaterFilename = "Snap.Hutao.Deployment.exe";
+    private const string LatestReleaseApiEndpoint = "https://api.github.com/repos/zhongshen6/Snap.Hutao.Rev/releases/latest";
+    private const string LatestReleasePage = "https://github.com/zhongshen6/Snap.Hutao.Rev/releases/latest";
 
     // Avoid injecting services directly
     private readonly IServiceProvider serviceProvider;
@@ -38,10 +39,8 @@ internal sealed partial class UpdateService : IUpdateService
                 ITaskContext taskContext = scope.ServiceProvider.GetRequiredService<ITaskContext>();
                 await taskContext.SwitchToBackgroundAsync();
 
-                HutaoInfrastructureClient infrastructureClient = scope.ServiceProvider.GetRequiredService<HutaoInfrastructureClient>();
-                HutaoResponse<HutaoPackageInformation> response = await infrastructureClient.GetHutaoVersionInformationAsync(token).ConfigureAwait(false);
-
-                if (!ResponseValidator.TryValidate(response, scope.ServiceProvider, out HutaoPackageInformation? packageInformation))
+                GitHubLatestRelease? latestRelease = await GetLatestReleaseAsync(scope.ServiceProvider, token).ConfigureAwait(false);
+                if (latestRelease is null || !TryCreatePackageInformation(latestRelease, out HutaoPackageInformation packageInformation))
                 {
                     checkUpdateResult.Kind = CheckUpdateResultKind.VersionApiInvalidResponse;
                     return checkUpdateResult;
@@ -64,7 +63,6 @@ internal sealed partial class UpdateService : IUpdateService
                 {
                     checkUpdateResult.Kind = CheckUpdateResultKind.VersionApiInvalidSha256;
                 }
-
                 return checkUpdateResult;
             }
             finally
@@ -112,14 +110,10 @@ internal sealed partial class UpdateService : IUpdateService
                     return;
                 }
 
-#if IS_ALPHA_BUILD
-                if (result.PackageInformation?.Mirrors.SingleOrDefault() is { MirrorType: Web.Hutao.HutaoPackageMirrorType.Browser } mirror)
+                if (result.PackageInformation?.Mirrors.SingleOrDefault(static mirror => mirror.MirrorType is Web.Hutao.HutaoPackageMirrorType.Browser) is { } mirror)
                 {
                     await Windows.System.Launcher.LaunchUriAsync(mirror.Url.ToUri());
                 }
-#else
-                await LaunchUpdaterAsync().ConfigureAwait(false);
-#endif
             }
             catch (Exception ex)
             {
@@ -132,21 +126,78 @@ internal sealed partial class UpdateService : IUpdateService
         }
     }
 
-    private async ValueTask LaunchUpdaterAsync()
+    private static bool TryCreatePackageInformation(GitHubLatestRelease release, out HutaoPackageInformation packageInformation)
     {
-        string updaterTargetPath = HutaoRuntime.GetDataUpdateCacheDirectoryFile(UpdaterFilename);
-        InstalledLocation.CopyFileFromApplicationUri($"ms-appx:///{UpdaterFilename}", updaterTargetPath);
-
-        using (IServiceScope scope = serviceProvider.CreateScope())
+        packageInformation = default!;
+        if (!TryParseVersion(release.TagName, out Version version) && !TryParseVersion(release.Name, out version))
         {
-            HutaoUserOptions hutaoUserOptions = scope.ServiceProvider.GetRequiredService<HutaoUserOptions>();
-
-            string commandLine = new CommandLineBuilder()
-                .Append("update", await hutaoUserOptions.GetAccessTokenAsync().ConfigureAwait(false))
-                .ToString();
-
-            // The updater will request UAC permissions itself
-            ProcessFactory.StartUsingShellExecute(commandLine, updaterTargetPath);
+            return false;
         }
+
+        packageInformation = new()
+        {
+            Version = version,
+            Validation = release.TagName ?? release.HtmlUrl ?? "github",
+            Mirrors =
+            [
+                new HutaoPackageMirror
+                {
+                    Url = string.IsNullOrWhiteSpace(release.HtmlUrl) ? LatestReleasePage : release.HtmlUrl!,
+                    MirrorName = "GitHub Releases",
+                    MirrorType = HutaoPackageMirrorType.Browser,
+                },
+            ],
+        };
+        return true;
+    }
+
+    private static bool TryParseVersion(string? value, out Version version)
+    {
+        version = default!;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        string trimmed = value.Trim().TrimStart('v', 'V');
+        int end = 0;
+        while (end < trimmed.Length && (char.IsDigit(trimmed[end]) || trimmed[end] is '.'))
+        {
+            end++;
+        }
+
+        return end > 0 && Version.TryParse(trimmed[..end], out version);
+    }
+
+    private static async ValueTask<GitHubLatestRelease?> GetLatestReleaseAsync(IServiceProvider serviceProvider, CancellationToken token)
+    {
+        IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+        using HttpClient httpClient = httpClientFactory.CreateClient();
+        using CancellationTokenSource source = CancellationTokenSource.CreateLinkedTokenSource(token);
+        source.CancelAfter(TimeSpan.FromSeconds(5));
+
+        using HttpRequestMessage request = new(HttpMethod.Get, LatestReleaseApiEndpoint);
+        request.Headers.Accept.ParseAdd("application/vnd.github+json");
+
+        using HttpResponseMessage response = await httpClient.SendAsync(request, source.Token).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        await using Stream stream = await response.Content.ReadAsStreamAsync(source.Token).ConfigureAwait(false);
+        return await JsonSerializer.DeserializeAsync<GitHubLatestRelease>(stream, cancellationToken: source.Token).ConfigureAwait(false);
+    }
+
+    private sealed class GitHubLatestRelease
+    {
+        [JsonPropertyName("tag_name")]
+        public string? TagName { get; set; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("html_url")]
+        public string? HtmlUrl { get; set; }
     }
 }
