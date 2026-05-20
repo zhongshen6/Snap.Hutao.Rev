@@ -26,6 +26,11 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
     private readonly ILogger<GitRepositoryService> logger;
     private readonly IServiceProvider serviceProvider;
     private readonly ITaskContext taskContext;
+    private static readonly TimeSpan GitTransferInactivityTimeout = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan MirrorListRequestTimeout = TimeSpan.FromSeconds(6);
+    private const int MirrorProgressFailureLimit = 10;
+    private const int MirrorNoProgressFailureLimit = 3;
+    private const int MirrorListMaxAttempts = 3;
 
     [GeneratedConstructor]
     public partial GitRepositoryService(IServiceProvider serviceProvider);
@@ -51,18 +56,20 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
             ImmutableArray<GitRepository> infos;
             using (IServiceScope scope = serviceProvider.CreateScope())
             {
-                HutaoInfrastructureClient infrastructureClient = scope.ServiceProvider.GetRequiredService<HutaoInfrastructureClient>();
-                HutaoResponse<ImmutableArray<GitRepository>> response = await infrastructureClient.GetGitRepositoryAsync(name).ConfigureAwait(false);
-                if (!ResponseValidator.TryValidate(response, scope.ServiceProvider, out infos))
+                ImmutableArray<GitRepository>? fetchedInfos = await TryGetRepositoryInfosAsync(scope.ServiceProvider, name).ConfigureAwait(false);
+                if (fetchedInfos is not { } validInfos)
                 {
                     return new(false, default);
                 }
+
+                infos = validInfos;
             }
 
             string directory = Path.GetFullPath(Path.Combine(HutaoRuntime.GetDataRepositoryDirectory(), name));
             BackgroundActivity.BackgroundActivity activity = GetActivityByName(name);
 
             bool failed = false;
+            bool succeeded = false;
             List<Exception> exceptions = [];
             try
             {
@@ -76,22 +83,10 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
                         continue;
                     }
 
-                    try
+                    if (TryEnsureRepositoryWithRetries(activity, directory, info, exceptions, out ValueResult<bool, ValueDirectory> ensuredRepository))
                     {
-                        try
-                        {
-                            return EnsureRepository(activity, directory, info, false);
-                        }
-                        catch (Exception first)
-                        {
-                            logger.LogWarning(first, "[Metadata] Failed to update existing repository, fallback to reclone: Directory={Directory}, Url={Url}", directory, info.HttpsUrl.OriginalString);
-                            exceptions.Add(first);
-                            return EnsureRepository(activity, directory, info, true);
-                        }
-                    }
-                    catch (Exception second)
-                    {
-                        exceptions.Add(second);
+                        succeeded = true;
+                        return ensuredRepository;
                     }
                 }
             }
@@ -102,7 +97,7 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
             }
             finally
             {
-                if (!failed)
+                if (!failed && succeeded)
                 {
                     await activity.NotifyAsync(taskContext).ConfigureAwait(false);
                     await activity.UpdateAsync(taskContext, SH.ServiceGitRepositoryOperationCompleted, true, false, false, false).ConfigureAwait(false);
@@ -113,6 +108,55 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
             await activity.UpdateAsync(taskContext, SH.ServiceGitRepositoryOperationFailed, false, true, false, false).ConfigureAwait(false);
             throw new GitRepositoryException(SH.ServiceGitRepositoryOperationFailed, exceptions);
         }
+    }
+
+    private async ValueTask<ImmutableArray<GitRepository>?> TryGetRepositoryInfosAsync(IServiceProvider scopedServiceProvider, string name)
+    {
+        HutaoInfrastructureClient infrastructureClient = scopedServiceProvider.GetRequiredService<HutaoInfrastructureClient>();
+
+        for (int attempt = 1; attempt <= MirrorListMaxAttempts; attempt++)
+        {
+            try
+            {
+                using CancellationTokenSource timeoutCts = new(MirrorListRequestTimeout);
+                HutaoResponse<ImmutableArray<GitRepository>> response = await infrastructureClient.GetGitRepositoryAsync(name, timeoutCts.Token).ConfigureAwait(false);
+
+                if (ResponseValidator.TryValidateWithoutUINotification(response, scopedServiceProvider, out ImmutableArray<GitRepository> infos))
+                {
+                    if (attempt > 1)
+                    {
+                        logger.LogInformation("[Metadata] Repository mirror list recovered: Name={Name}, Attempt={Attempt}", name, attempt);
+                    }
+
+                    return infos;
+                }
+
+                logger.LogWarning("[Metadata] Repository mirror list request returned invalid response: Name={Name}, Attempt={Attempt}/{MaxAttempts}, ReturnCode={ReturnCode}, Message={Message}",
+                    name,
+                    attempt,
+                    MirrorListMaxAttempts,
+                    response.ReturnCode,
+                    response.Message);
+            }
+            catch (OperationCanceledException ex)
+            {
+                logger.LogWarning(ex, "[Metadata] Repository mirror list request timed out: Name={Name}, Attempt={Attempt}/{MaxAttempts}, RequestTimeout={RequestTimeout}s",
+                    name,
+                    attempt,
+                    MirrorListMaxAttempts,
+                    MirrorListRequestTimeout.TotalSeconds);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "[Metadata] Repository mirror list request failed: Name={Name}, Attempt={Attempt}/{MaxAttempts}",
+                    name,
+                    attempt,
+                    MirrorListMaxAttempts);
+            }
+        }
+
+        logger.LogError("[Metadata] Repository mirror list request exhausted retries: Name={Name}, Attempts={Attempts}", name, MirrorListMaxAttempts);
+        return default;
     }
 
     private async ValueTask<bool> ProbeRepositoryAsync(BackgroundActivity.BackgroundActivity activity, GitRepository info)
@@ -159,11 +203,94 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
         }
     }
 
-    private ValueResult<bool, ValueDirectory> EnsureRepository(BackgroundActivity.BackgroundActivity activity, string directory, GitRepository info, bool forceInvalid)
+    private bool TryEnsureRepositoryWithRetries(BackgroundActivity.BackgroundActivity activity, string directory, GitRepository info, List<Exception> exceptions, out ValueResult<bool, ValueDirectory> result)
     {
-        // Increase & decrease count in the same method, so that crash in the middle can correctly count as failure.
-        RepositoryAffinity.IncreaseFailure(info);
+        int progressFailures = 0;
+        int noProgressFailures = 0;
+        bool forceInvalid = false;
 
+        while (true)
+        {
+            using GitTransferWatchdog watchdog = new(GitTransferInactivityTimeout);
+
+            try
+            {
+                result = EnsureRepository(activity, directory, info, forceInvalid, watchdog);
+                RepositoryAffinity.DecreaseFailure(info);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+
+                if (watchdog.WasSoftCanceled)
+                {
+                    if (watchdog.HasAnyProgress)
+                    {
+                        progressFailures++;
+                        noProgressFailures = 0;
+                        logger.LogWarning(ex, "[Metadata] Repository transfer stalled after progress, retrying same mirror: Failure={Failure}/{FailureLimit}, Directory={Directory}, Url={Url}",
+                            progressFailures,
+                            MirrorProgressFailureLimit,
+                            directory,
+                            info.HttpsUrl.OriginalString);
+
+                        if (progressFailures >= MirrorProgressFailureLimit)
+                        {
+                            logger.LogWarning("[Metadata] Switching mirror after {FailureLimit} stalled transfers with progress: Directory={Directory}, Url={Url}",
+                                MirrorProgressFailureLimit,
+                                directory,
+                                info.HttpsUrl.OriginalString);
+                            RepositoryAffinity.IncreaseFailure(info);
+                            result = default;
+                            return false;
+                        }
+
+                        activity.Update(taskContext, $"Retry: {info.Name}", false, false, false, true);
+                    }
+                    else
+                    {
+                        progressFailures = 0;
+                        noProgressFailures++;
+                        logger.LogWarning(ex, "[Metadata] Repository transfer made no progress before timeout: Failure={Failure}/{FailureLimit}, Directory={Directory}, Url={Url}",
+                            noProgressFailures,
+                            MirrorNoProgressFailureLimit,
+                            directory,
+                            info.HttpsUrl.OriginalString);
+
+                        if (noProgressFailures >= MirrorNoProgressFailureLimit)
+                        {
+                            logger.LogWarning("[Metadata] Switching mirror after {FailureLimit} consecutive no-progress failures: Directory={Directory}, Url={Url}",
+                                MirrorNoProgressFailureLimit,
+                                directory,
+                                info.HttpsUrl.OriginalString);
+                            RepositoryAffinity.IncreaseFailure(info);
+                            result = default;
+                            return false;
+                        }
+                    }
+
+                    forceInvalid |= !Repository.IsValid(directory);
+                    continue;
+                }
+
+                if (!forceInvalid)
+                {
+                    logger.LogWarning(ex, "[Metadata] Failed to update existing repository, fallback to reclone: Directory={Directory}, Url={Url}", directory, info.HttpsUrl.OriginalString);
+                    forceInvalid = true;
+                    continue;
+                }
+
+                logger.LogWarning(ex, "[Metadata] Repository operation failed on mirror: Directory={Directory}, Url={Url}", directory, info.HttpsUrl.OriginalString);
+                RepositoryAffinity.IncreaseFailure(info);
+                result = default;
+                return false;
+            }
+        }
+    }
+
+    private ValueResult<bool, ValueDirectory> EnsureRepository(BackgroundActivity.BackgroundActivity activity, string directory, GitRepository info, bool forceInvalid, GitTransferWatchdog watchdog)
+    {
         // Debug: Log the initial state
         bool isRepoValid = Repository.IsValid(directory);
         bool directoryExists = Directory.Exists(directory);
@@ -190,12 +317,30 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
                 },
             OnProgress = output =>
             {
+                if (!watchdog.TryReportProgress($"progress:{output}"))
+                {
+                    logger.LogWarning("[Metadata] Cancelling repository transfer after {TimeoutSeconds}s without progress: Directory={Directory}, Url={Url}",
+                        GitTransferInactivityTimeout.TotalSeconds,
+                        directory,
+                        info.HttpsUrl.OriginalString);
+                    return false;
+                }
+
                 int idx = output.AsSpan().IndexOfAny("\r\n");
                 activity.Update(taskContext, idx > 0 ? output.Substring(0, idx) : output, false, false, false, false);
                 return true;
             },
             OnTransferProgress = progress =>
             {
+                if (!watchdog.TryReportProgress($"transfer:{progress.ReceivedObjects}:{progress.TotalObjects}:{progress.ReceivedBytes}"))
+                {
+                    logger.LogWarning("[Metadata] Cancelling repository transfer after {TimeoutSeconds}s without progress: Directory={Directory}, Url={Url}",
+                        GitTransferInactivityTimeout.TotalSeconds,
+                        directory,
+                        info.HttpsUrl.OriginalString);
+                    return false;
+                }
+
                 double progressValue = progress.TotalObjects == 0 ? 0 : (double)progress.ReceivedObjects / progress.TotalObjects;
                 activity.Update(taskContext, $"{progress.ReceivedObjects}/{progress.TotalObjects}, {Converters.ToFileSizeString(progress.ReceivedBytes)}", false, false, true, false, progressValue);
                 return true;
@@ -222,6 +367,10 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
             Repository.AdvancedClone(info.HttpsUrl.OriginalString, directory, new(fetchOptions)
             {
                 Checkout = true,
+                OnCheckoutProgress = (path, completedSteps, totalSteps) =>
+                {
+                    watchdog.TryReportProgress($"checkout:{completedSteps}:{totalSteps}:{path}");
+                },
             });
 
             logger.LogInformation("[Metadata] Clone completed successfully");
@@ -268,7 +417,6 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
             logger.LogInformation("[Metadata] Update completed successfully");
         }
 
-        RepositoryAffinity.DecreaseFailure(info);
         return new(true, directory);
     }
 
@@ -280,5 +428,111 @@ internal sealed partial class GitRepositoryService : IGitRepositoryService
             "Snap.ContentDelivery" => backgroundActivityOptions.FullTrustInitialization,
             _ => backgroundActivityOptions.Default,
         };
+    }
+
+    private sealed class GitTransferWatchdog : IDisposable
+    {
+        private readonly CancellationTokenSource cancellationTokenSource = new();
+        private readonly Task monitorTask;
+        private readonly object syncRoot = new();
+        private readonly long timeoutMilliseconds;
+        private bool hasAnyProgress;
+        private bool cancelRequested;
+        private long lastProgressTick;
+        private string? lastProgressSignature;
+
+        public GitTransferWatchdog(TimeSpan timeout)
+        {
+            timeoutMilliseconds = (long)timeout.TotalMilliseconds;
+            lastProgressTick = Environment.TickCount64;
+            monitorTask = Task.Run(MonitorAsync);
+        }
+
+        public bool HasAnyProgress
+        {
+            get
+            {
+                lock (syncRoot)
+                {
+                    return hasAnyProgress;
+                }
+            }
+        }
+
+        public bool WasSoftCanceled
+        {
+            get
+            {
+                lock (syncRoot)
+                {
+                    return cancelRequested;
+                }
+            }
+        }
+
+        public bool TryReportProgress(string signature)
+        {
+            lock (syncRoot)
+            {
+                if (cancelRequested)
+                {
+                    return false;
+                }
+
+                if (!string.Equals(lastProgressSignature, signature, StringComparison.Ordinal))
+                {
+                    hasAnyProgress = true;
+                    lastProgressTick = Environment.TickCount64;
+                    lastProgressSignature = signature;
+                }
+
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            cancellationTokenSource.Cancel();
+
+            try
+            {
+                monitorTask.Wait(TimeSpan.FromSeconds(1));
+            }
+            catch (AggregateException)
+            {
+            }
+            finally
+            {
+                cancellationTokenSource.Dispose();
+            }
+        }
+
+        private async Task MonitorAsync()
+        {
+            try
+            {
+                while (!cancellationTokenSource.IsCancellationRequested)
+                {
+                    await Task.Delay(250, cancellationTokenSource.Token).ConfigureAwait(false);
+
+                    lock (syncRoot)
+                    {
+                        if (cancelRequested)
+                        {
+                            return;
+                        }
+
+                        if (Environment.TickCount64 - lastProgressTick >= timeoutMilliseconds)
+                        {
+                            cancelRequested = true;
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
     }
 }
