@@ -198,6 +198,11 @@
                                     Opacity="0.7"
                                     Style="{StaticResource CaptionTextBlockStyle}"
                                     Text="{Binding Description}"/>
+                                <TextBlock
+                                    Opacity="0.7"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{Binding RelatedAvatarLine}"
+                                    Visibility="{Binding RelatedAvatarLine, Converter={StaticResource EmptyObjectToVisibilityConverter}}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
@@ -227,7 +232,69 @@
             </DataTemplate>
 
             <DataTemplate x:Key="StatisticsItemTemplate" x:DataType="shvcu:StatisticsCultivateItem">
-                <shuxcc:HorizontalCard Background="{Binding IsToday, Converter={ThemeResource BoolToStatisticsBrushSelector}}">
+                <Border Background="Transparent">
+                    <shuxcc:HorizontalCard
+                        Background="{Binding IsToday, Converter={ThemeResource BoolToStatisticsBrushSelector}}"
+                        IsRightTapEnabled="True"
+                        IsTabStop="True"
+                        UseSystemFocusVisuals="True">
+                        <FrameworkElement.ContextFlyout>
+                            <Flyout FlyoutPresenterStyle="{ThemeResource FlyoutPresenterPadding0Style}">
+                                <ScrollViewer MaxHeight="320" MinWidth="220" Padding="12,10">
+                                    <ItemsControl ItemsSource="{Binding StatisticsConsumerMenuLines, Mode=OneWay}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="shvcu:StatisticsConsumerMenuLine">
+                                                <Grid Margin="0,3">
+                                                    <TextBlock
+                                                        Style="{ThemeResource BodyTextBlockStyle}"
+                                                        Text="{x:Bind PlainMessage, Mode=OneWay}"
+                                                        TextWrapping="WrapWholeWords"
+                                                        Visibility="{x:Bind IsPlainMessage, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                    <StackPanel
+                                                        Orientation="Horizontal"
+                                                        Spacing="4"
+                                                        VerticalAlignment="Center"
+                                                        Visibility="{x:Bind ShowRichRow, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                        <shuxc:ItemIcon
+                                                            Width="28"
+                                                            Height="28"
+                                                            Icon="{x:Bind LeadingIcon, Mode=OneWay}"
+                                                            Quality="{x:Bind LeadingQuality, Mode=OneWay}"/>
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Style="{ThemeResource BodyTextBlockStyle}"
+                                                            Text="{x:Bind FirstName, Mode=OneWay}"/>
+                                                        <StackPanel
+                                                            Orientation="Horizontal"
+                                                            Spacing="4"
+                                                            VerticalAlignment="Center"
+                                                            Visibility="{x:Bind HasSecondIcon, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                            <TextBlock
+                                                                VerticalAlignment="Center"
+                                                                Style="{ThemeResource BodyTextBlockStyle}"
+                                                                Text="{x:Bind BetweenSeparator, Mode=OneWay}"/>
+                                                            <shuxc:ItemIcon
+                                                                Width="28"
+                                                                Height="28"
+                                                                Icon="{x:Bind SecondIcon, Mode=OneWay}"
+                                                                Quality="{x:Bind SecondQuality, Mode=OneWay}"/>
+                                                            <TextBlock
+                                                                VerticalAlignment="Center"
+                                                                Style="{ThemeResource BodyTextBlockStyle}"
+                                                                Text="{x:Bind SecondName, Mode=OneWay}"/>
+                                                        </StackPanel>
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Style="{ThemeResource BodyTextBlockStyle}"
+                                                            Text="{x:Bind CountSuffix, Mode=OneWay}"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Flyout>
+                        </FrameworkElement.ContextFlyout>
                     <shuxcc:HorizontalCard.Left>
                         <Grid Grid.Column="0">
                             <shuxc:ItemIcon
@@ -256,14 +323,44 @@
                                 VerticalAlignment="Center"
                                 Text="{Binding Inner.Name}"
                                 TextTrimming="CharacterEllipsis"/>
-                            <TextBlock
+                            <StackPanel
                                 Grid.Column="1"
-                                Margin="0,0,0,0"
                                 VerticalAlignment="Center"
-                                Text="{Binding FormattedCount}"/>
+                                Orientation="Horizontal"
+                                Spacing="0">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{Binding FormattedCount}"
+                                    Visibility="{Binding ShowNonMergeCompactCount, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                <StackPanel
+                                    Orientation="Horizontal"
+                                    Spacing="0"
+                                    Visibility="{Binding ShowMergeSpacedWithoutParen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding DisplayCurrent, Mode=OneWay}"/>
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding SlashCountSuffix, Mode=OneWay}"/>
+                                </StackPanel>
+                                <StackPanel
+                                    Orientation="Horizontal"
+                                    Spacing="0"
+                                    Visibility="{Binding ShowMergeInventoryParen, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                        Text="{Binding DisplayCurrent, Mode=OneWay}"
+                                        Visibility="{Binding MergeDisplayLeadUseRed, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                        Text="{Binding DisplayCurrent, Mode=OneWay}"
+                                        Visibility="{Binding MergeDisplayLeadUseGreen, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding RawInventoryParenthetical, Mode=OneWay}"/>
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding SlashCountSuffixForParen, Mode=OneWay}"/>
+                                </StackPanel>
+                            </StackPanel>
                         </Grid>
                     </shuxcc:HorizontalCard.Right>
                 </shuxcc:HorizontalCard>
+                </Border>
             </DataTemplate>
 
             <DataTemplate x:Key="InventoryItemTemplate" x:DataType="shvcu:InventoryItemView">
@@ -374,7 +471,13 @@
                         CommandParameter="{Binding Projects.CurrentItem, Mode=OneWay}"
                         Icon="{shuxm:FontIcon Glyph=&#xE894;}"
                         Label="{shuxm:ResourceString Name=ViewPageCultivationClearInventory}"/>
-                    <AppBarButton Icon="{shuxm:FontIcon Glyph=&#xE895;}" Label="{shuxm:ResourceString Name=ViewPageCultivationRefreshInventory}">
+                    <AppBarButton
+                        Command="{Binding SyncAllAvatarsAndWeaponsCommand}"
+                        Icon="{shuxm:FontIcon Glyph=&#xE72C;}"
+                        Label="{shuxm:ResourceString Name=ViewPageCultivationSyncAllAvatarsAndWeapons}"/>
+                    <AppBarButton
+                        Icon="{shuxm:FontIcon Glyph=&#xE895;}"
+                        Label="{shuxm:ResourceString Name=ViewPageCultivationRefreshInventory}">
                         <AppBarButton.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedRight">
                                 <MenuFlyoutItem
@@ -388,6 +491,10 @@
                             </MenuFlyout>
                         </AppBarButton.Flyout>
                     </AppBarButton>
+                    <AppBarToggleButton
+                        Icon="{shuxm:FontIcon Glyph=&#xE8B7;}"
+                        IsChecked="{Binding SyncInventoryByCalculatorToAllProjects, Mode=TwoWay}"
+                        Label="{shuxm:ResourceString Name=ViewPageCultivationRefreshInventoryAllPlansShortLabel}"/>
                     <AppBarButton
                         Command="{Binding AddProjectCommand}"
                         Icon="{shuxm:FontIcon Glyph=&#xE710;}"
@@ -481,6 +588,25 @@
                                     Icon="{shuxm:FontIcon Glyph=&#xE8CB;}"
                                     IsChecked="{Binding IncompleteFirst, Mode=TwoWay}"
                                     Label="{shuxm:ResourceString Name=ViewPageCultivationMaterialListIncompleteFirstLabel}"
+                                    Visibility="{Binding ElementName=MaterialListPivot, Path=SelectedItem.Tag, Converter={StaticResource MaterialListSelectedItemIsStatisticsViewConverter}}"/>
+                                <AppBarToggleButton
+                                    Command="{Binding RefreshStatisticsItemsCommand}"
+                                    Icon="{shuxm:FontIcon Glyph=&#xE7C3;}"
+                                    IsChecked="{Binding MergeUpgradeMaterials, Mode=TwoWay}"
+                                    Label="{shuxm:ResourceString Name=ViewPageCultivationMergeUpgradeMaterialsLabel}"
+                                    Visibility="{Binding ElementName=MaterialListPivot, Path=SelectedItem.Tag, Converter={StaticResource MaterialListSelectedItemIsStatisticsViewConverter}}"/>
+                                <AppBarToggleButton
+                                    Command="{Binding RefreshStatisticsItemsCommand}"
+                                    Icon="{shuxm:FontIcon Glyph=&#xE9A1;}"
+                                    IsChecked="{Binding TalentSynthCritTenPercent, Mode=TwoWay}"
+                                    IsEnabled="{Binding MergeUpgradeMaterials}"
+                                    Label="{shuxm:ResourceString Name=ViewPageCultivationTalentSynthCritTenPercentLabel}"
+                                    Visibility="{Binding ElementName=MaterialListPivot, Path=SelectedItem.Tag, Converter={StaticResource MaterialListSelectedItemIsStatisticsViewConverter}}"/>
+                                <AppBarToggleButton
+                                    Command="{Binding RefreshStatisticsItemsCommand}"
+                                    Icon="{shuxm:FontIcon Glyph=&#xE8FD;}"
+                                    IsChecked="{Binding WeeklyBossMaterialInterchange, Mode=TwoWay}"
+                                    Label="{shuxm:ResourceString Name=ViewPageCultivationWeeklyBossMaterialInterchangeLabel}"
                                     Visibility="{Binding ElementName=MaterialListPivot, Path=SelectedItem.Tag, Converter={StaticResource MaterialListSelectedItemIsStatisticsViewConverter}}"/>
                                 <AppBarButton Icon="{shuxm:FontIcon Glyph=&#xE946;}" Label="{shuxm:ResourceString Name=ViewPageCultivationMaterialListResinStatisticsLabel}">
                                     <AppBarButton.Flyout>
@@ -617,7 +743,6 @@
                                 </Style>
                             </GridView.ItemContainerStyle>
                         </GridView>
-
                     </Border>
                 </Border>
             </PivotItem>

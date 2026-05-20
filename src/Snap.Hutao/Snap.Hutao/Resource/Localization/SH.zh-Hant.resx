@@ -2429,6 +2429,9 @@
   <data name="ViewPageCultivationNavigateAction" xml:space="preserve">
     <value>前往</value>
   </data>
+  <data name="ViewPageCultivationSyncAllAvatarsAndWeapons" xml:space="preserve">
+    <value>同步所有角色與武器</value>
+  </data>
   <data name="ViewPageCultivationRefreshInventory" xml:space="preserve">
     <value>同步背包物品</value>
   </data>

@@ -24,7 +24,12 @@ internal sealed class RefreshOptions
 
     public required IViewModelSupportLaunchExecution? ViewModelSupportLaunchExecution { get; init; }
 
-    public static RefreshOptions CreateForWebCalculator(CultivateProject project, ICultivationMetadataContext context)
+    /// <summary>
+    /// 通过养成计算器同步背包时，是否将结果写入所有养成计划（否则仅当前计划）。
+    /// </summary>
+    public bool SyncCalculatorInventoryToAllProjects { get; init; }
+
+    public static RefreshOptions CreateForWebCalculator(CultivateProject project, ICultivationMetadataContext context, bool syncCalculatorInventoryToAllProjects = false)
     {
         return new()
         {
@@ -33,6 +38,7 @@ internal sealed class RefreshOptions
             MetadataContext = context,
             YaeService = default,
             ViewModelSupportLaunchExecution = default,
+            SyncCalculatorInventoryToAllProjects = syncCalculatorInventoryToAllProjects,
         };
     }
 

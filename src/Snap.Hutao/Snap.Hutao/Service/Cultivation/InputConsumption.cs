@@ -19,4 +19,9 @@ internal sealed class InputConsumption
     public required LevelInformation LevelInformation { get; init; }
 
     public required ConsumptionSaveStrategyKind Strategy { get; init; }
+
+    /// <summary>
+    /// 武器条目关联的养成角色条目的主键（自引用外键，可为空）。
+    /// </summary>
+    public Guid? RelatedEntryId { get; init; }
 }

@@ -2,20 +2,28 @@
 // Licensed under the MIT license.
 
 using Snap.Hutao.Core.Database;
+using Snap.Hutao.Core.Text.Json;
+using Snap.Hutao.Model;
+using Snap.Hutao.Model.Cultivation;
 using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Model.Entity.Primitive;
 using Snap.Hutao.Model.Intrinsic;
 using Snap.Hutao.Model.Metadata;
+using Snap.Hutao.Model.Metadata.Item;
 using Snap.Hutao.Model.Primitive;
+using Snap.Hutao.Service.Abstraction;
 using Snap.Hutao.Service.Cultivation.Consumption;
 using Snap.Hutao.Service.Inventory;
 using Snap.Hutao.Service.Metadata.ContextAbstraction;
 using Snap.Hutao.ViewModel.Cultivation;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using ModelItem = Snap.Hutao.Model.Item;
 
 namespace Snap.Hutao.Service.Cultivation;
@@ -63,10 +71,21 @@ internal sealed partial class CultivationService : ICultivationService
         {
             ImmutableArray<CultivateEntry> entries = cultivationRepository.GetCultivateEntryImmutableArrayIncludingLevelInformationByProjectId(cultivateProject.InnerId);
 
+            Dictionary<Guid, CultivateEntry> entryByInnerId = new(entries.Length);
+            foreach (ref readonly CultivateEntry entry in entries.AsSpan())
+            {
+                entryByInnerId[entry.InnerId] = entry;
+            }
+
             List<CultivateEntryView> resultEntries = new(entries.Length);
             foreach (ref readonly CultivateEntry entry in entries.AsSpan())
             {
                 ImmutableArray<CultivateItem> items = cultivationRepository.GetCultivateItemImmutableArrayByEntryId(entry.InnerId);
+                if (IsHiddenAssociationOnlyAvatarEntry(entry, items.Length))
+                {
+                    continue;
+                }
+
                 ImmutableArray<CultivateItemView>.Builder entryItems = ImmutableArray.CreateBuilder<CultivateItemView>(items.Length);
 
                 foreach (ref readonly CultivateItem cultivateItem in items.AsSpan())
@@ -83,7 +102,13 @@ internal sealed partial class CultivationService : ICultivationService
                     _ => default!,
                 };
 
-                resultEntries.Add(CultivateEntryView.Create(entry, item, entryItems.ToImmutable()));
+                string? relatedAvatarName = null;
+                if (entry.Type is CultivateType.Weapon && entry.RelatedEntryId is Guid relatedId && entryByInnerId.TryGetValue(relatedId, out CultivateEntry? relatedEntry) && relatedEntry.Type is CultivateType.AvatarAndSkill)
+                {
+                    relatedAvatarName = context.GetAvatarItem(relatedEntry.Id).Name;
+                }
+
+                resultEntries.Add(CultivateEntryView.Create(entry, item, entryItems.ToImmutable(), relatedAvatarName));
             }
 
             ObservableCollection<CultivateEntryView> result = resultEntries.SortByDescending(e => e.IsToday).ToObservableCollection();
@@ -92,20 +117,26 @@ internal sealed partial class CultivationService : ICultivationService
         }
     }
 
-    public async ValueTask<StatisticsCultivateItemCollection> GetStatisticsCultivateItemCollectionAsync(CultivateProject cultivateProject, ICultivationMetadataContext context, CancellationToken token)
+    public async ValueTask<StatisticsCultivateItemCollection> GetStatisticsCultivateItemCollectionAsync(CultivateProject cultivateProject, ICultivationMetadataContext context, CultivationStatisticsMergeOptions mergeOptions, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
         await taskContext.SwitchToBackgroundAsync();
-        return SynchronizedGetStatisticsCultivateItemCollection(cultivateProject, context);
+        token.ThrowIfCancellationRequested();
+        return SynchronizedGetStatisticsCultivateItemCollection(cultivateProject, context, mergeOptions, token);
 
-        StatisticsCultivateItemCollection SynchronizedGetStatisticsCultivateItemCollection(CultivateProject cultivateProject, ICultivationMetadataContext context)
+        StatisticsCultivateItemCollection SynchronizedGetStatisticsCultivateItemCollection(CultivateProject cultivateProject, ICultivationMetadataContext context, CultivationStatisticsMergeOptions mergeOptions, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
             Dictionary</* ItemId */ uint, StatisticsCultivateItem> resultItems = [];
             Guid projectId = cultivateProject.InnerId;
+            Dictionary<uint, uint> inventoryCounts = [];
 
             foreach (ref readonly CultivateEntry entry in cultivationRepository.GetCultivateEntryImmutableArrayByProjectId(projectId).AsSpan())
             {
+                token.ThrowIfCancellationRequested();
                 foreach (ref readonly CultivateItem item in cultivationRepository.GetCultivateItemImmutableArrayByEntryId(entry.InnerId).AsSpan())
                 {
+                    token.ThrowIfCancellationRequested();
                     ref StatisticsCultivateItem? existedItem = ref CollectionsMarshal.GetValueRefOrAddDefault(resultItems, item.ItemId, out _);
                     if (existedItem is null || existedItem.ExcludedFromPresentation)
                     {
@@ -116,12 +147,14 @@ internal sealed partial class CultivationService : ICultivationService
                         existedItem.Count += item.Count;
                     }
 
-                    RecursiveAddMaterialIngredientsByMaterialId(cultivateProject, context, resultItems, item.ItemId);
+                    RecursiveAddMaterialIngredientsByMaterialId(cultivateProject, context, resultItems, item.ItemId, token);
                 }
             }
 
             foreach (ref readonly InventoryItem inventoryItem in inventoryRepository.GetInventoryItemImmutableArrayByProjectId(projectId).AsSpan())
             {
+                token.ThrowIfCancellationRequested();
+                inventoryCounts[inventoryItem.ItemId] = inventoryItem.Count;
                 ref StatisticsCultivateItem existedItem = ref CollectionsMarshal.GetValueRefOrNullRef(resultItems, inventoryItem.ItemId);
                 if (!Unsafe.IsNullRef(in existedItem))
                 {
@@ -129,7 +162,70 @@ internal sealed partial class CultivationService : ICultivationService
                 }
             }
 
+            AddWeeklyBossGroupInventoryDonors(
+                resultItems,
+                inventoryCounts,
+                context,
+                cultivateProject.ServerTimeZoneOffset,
+                mergeOptions.WeeklyBossMaterialInterchange);
+
+            CultivationStatisticsSurplusMerge.Apply(resultItems, context, mergeOptions);
+            CultivationStatisticsWeeklyBossInterchange.Apply(
+                resultItems,
+                context.WeeklyBossMaterialInterchangeGroups,
+                mergeOptions.WeeklyBossMaterialInterchange);
+            ApplyStatisticsConsumerMenuLines(resultItems, projectId, context, cultivationRepository, token);
+
             return new(resultItems);
+        }
+    }
+
+    private static void AddWeeklyBossGroupInventoryDonors(
+        Dictionary<uint, StatisticsCultivateItem> items,
+        Dictionary<uint, uint> inventoryCounts,
+        ICultivationMetadataContext context,
+        TimeSpan offset,
+        bool enabled)
+    {
+        if (!enabled || context.WeeklyBossMaterialInterchangeGroups.IsDefaultOrEmpty)
+        {
+            return;
+        }
+
+        foreach (ImmutableArray<MaterialId> group in context.WeeklyBossMaterialInterchangeGroups)
+        {
+            bool anyPlannedInGroup = false;
+            foreach (MaterialId mid in group)
+            {
+                if (items.ContainsKey(mid))
+                {
+                    anyPlannedInGroup = true;
+                    break;
+                }
+            }
+
+            if (!anyPlannedInGroup)
+            {
+                continue;
+            }
+
+            foreach (MaterialId mid in group)
+            {
+                uint id = mid;
+                if (items.ContainsKey(id))
+                {
+                    continue;
+                }
+
+                if (!inventoryCounts.TryGetValue(id, out uint inv) || inv is 0U)
+                {
+                    continue;
+                }
+
+                StatisticsCultivateItem donor = StatisticsCultivateItem.Create(context.GetMaterial(id), offset);
+                donor.Current = inv;
+                items[id] = donor;
+            }
         }
     }
 
@@ -144,18 +240,60 @@ internal sealed partial class CultivationService : ICultivationService
         cultivationRepository.RemoveCultivateEntryById(entryId);
     }
 
+    public async ValueTask RemoveAvatarAndWeaponEntriesForCurrentProjectAsync()
+    {
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(projects.CurrentItem);
+        Guid projectId = projects.CurrentItem.InnerId;
+
+        await taskContext.SwitchToBackgroundAsync();
+
+        ImmutableArray<CultivateEntry> entries = cultivationRepository.GetCultivateEntryImmutableArrayByProjectId(projectId);
+        List<Guid> weaponEntryIds = new(entries.Length);
+        List<Guid> avatarEntryIds = new(entries.Length);
+        foreach (ref readonly CultivateEntry entry in entries.AsSpan())
+        {
+            switch (entry.Type)
+            {
+                case CultivateType.Weapon:
+                    weaponEntryIds.Add(entry.InnerId);
+                    break;
+                case CultivateType.AvatarAndSkill:
+                    avatarEntryIds.Add(entry.InnerId);
+                    break;
+            }
+        }
+
+        foreach (Guid id in weaponEntryIds)
+        {
+            cultivationRepository.RemoveCultivateEntryById(id);
+        }
+
+        foreach (Guid id in avatarEntryIds)
+        {
+            cultivationRepository.RemoveCultivateEntryById(id);
+        }
+
+        entryCollectionCache.TryRemove(projectId, out _);
+    }
+
     public void SaveCultivateItem(CultivateItemView item)
     {
         cultivationRepository.UpdateCultivateItem(item.Entity);
     }
 
-    public async ValueTask<ConsumptionSaveResultKind> SaveConsumptionAsync(InputConsumption inputConsumption)
+    public async ValueTask<ConsumptionSaveResult> SaveConsumptionAsync(InputConsumption inputConsumption)
     {
         // No selected project
         IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
         if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
         {
-            return ConsumptionSaveResultKind.NoProject;
+            return new(ConsumptionSaveResultKind.NoProject);
         }
 
         ArgumentNullException.ThrowIfNull(projects.CurrentItem);
@@ -165,7 +303,7 @@ internal sealed partial class CultivationService : ICultivationService
         // PreserveExisting or CreateNewEntry, but no item
         if (inputConsumption is { Strategy: not ConsumptionSaveStrategyKind.OverwriteExisting, Items: [] })
         {
-            return ConsumptionSaveResultKind.NoItem;
+            return new(ConsumptionSaveResultKind.NoItem);
         }
 
         // PreserveExisting or OverwriteExisting
@@ -178,7 +316,7 @@ internal sealed partial class CultivationService : ICultivationService
             {
                 if (inputConsumption.Strategy is ConsumptionSaveStrategyKind.PreserveExisting)
                 {
-                    return ConsumptionSaveResultKind.Skipped;
+                    return new(ConsumptionSaveResultKind.Skipped);
                 }
 
                 if (inputConsumption.Strategy is ConsumptionSaveStrategyKind.OverwriteExisting)
@@ -192,7 +330,7 @@ internal sealed partial class CultivationService : ICultivationService
 
                     if (inputConsumption.Items is [])
                     {
-                        return ConsumptionSaveResultKind.Removed;
+                        return new(ConsumptionSaveResultKind.Removed);
                     }
                 }
             }
@@ -200,13 +338,14 @@ internal sealed partial class CultivationService : ICultivationService
             {
                 if (inputConsumption.Items is [])
                 {
-                    return ConsumptionSaveResultKind.NoItem;
+                    return new(ConsumptionSaveResultKind.NoItem);
                 }
             }
         }
 
         {
             CultivateEntry entry = CultivateEntry.From(projects.CurrentItem.InnerId, inputConsumption.Type, inputConsumption.ItemId);
+            entry.RelatedEntryId = inputConsumption.RelatedEntryId;
             cultivationRepository.AddCultivateEntry(entry);
 
             CultivateEntryLevelInformation entryLevelInformation = CultivateEntryLevelInformation.From(entry.InnerId, inputConsumption.Type, inputConsumption.LevelInformation);
@@ -218,9 +357,51 @@ internal sealed partial class CultivationService : ICultivationService
             // The consumption save operation is always performed outside cultivation page
             // and without touching the cache. So we have to invalidate the cache manually.
             entryCollectionCache.TryRemove(projects.CurrentItem.InnerId, out _);
+
+            return new(ConsumptionSaveResultKind.Added, entry.InnerId);
+        }
+    }
+
+    public async ValueTask<Guid?> TryGetAvatarCultivateEntryInnerIdAsync(uint avatarId)
+    {
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return null;
         }
 
-        return ConsumptionSaveResultKind.Added;
+        ArgumentNullException.ThrowIfNull(projects.CurrentItem);
+
+        await taskContext.SwitchToBackgroundAsync();
+        return cultivationRepository.TryGetAvatarCultivateEntryInnerId(projects.CurrentItem.InnerId, avatarId);
+    }
+
+    public async ValueTask<Guid?> EnsureAvatarAssociationStubAsync(uint avatarId, LevelInformation levelInformation)
+    {
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        ArgumentNullException.ThrowIfNull(projects.CurrentItem);
+
+        await taskContext.SwitchToBackgroundAsync();
+
+        Guid projectId = projects.CurrentItem.InnerId;
+        if (cultivationRepository.TryGetAvatarCultivateEntryInnerId(projectId, avatarId) is Guid existing)
+        {
+            return existing;
+        }
+
+        CultivateEntry entry = CultivateEntry.From(projectId, CultivateType.AvatarAndSkill, avatarId);
+        cultivationRepository.AddCultivateEntry(entry);
+
+        CultivateEntryLevelInformation level = CultivateEntryLevelInformation.From(entry.InnerId, CultivateType.AvatarAndSkill, levelInformation);
+        cultivationRepository.AddLevelInformation(level);
+
+        entryCollectionCache.TryRemove(projectId, out _);
+        return entry.InnerId;
     }
 
     public async ValueTask<ProjectAddResultKind> TryAddProjectAsync(CultivateProject project)
@@ -242,6 +423,50 @@ internal sealed partial class CultivationService : ICultivationService
         projects.MoveCurrentTo(project);
 
         return ProjectAddResultKind.Added;
+    }
+
+    public async ValueTask<CultivateProjectAvatarPropertyBatchPreferences?> GetAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync()
+    {
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        string? json = projects.CurrentItem?.AvatarPropertyBatchCultivatePreferencesJson;
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<CultivateProjectAvatarPropertyBatchPreferences>(json, JsonOptions.Default);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    public async ValueTask SaveAvatarPropertyBatchCultivatePreferencesForCurrentProjectAsync(CultivateProjectAvatarPropertyBatchPreferences preferences)
+    {
+        ArgumentNullException.ThrowIfNull(preferences);
+
+        IAdvancedDbCollectionView<CultivateProject> projects = await GetProjectCollectionAsync().ConfigureAwait(false);
+        if (!await EnsureCurrentProjectAsync(projects).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(projects.CurrentItem);
+
+        CultivateProject project = projects.CurrentItem;
+
+        await taskContext.SwitchToBackgroundAsync();
+
+        project.AvatarPropertyBatchCultivatePreferencesJson = JsonSerializer.Serialize(preferences, JsonOptions.Default);
+        cultivationRepository.Update(project);
     }
 
     public async ValueTask RemoveProjectAsync(CultivateProject project)
@@ -280,8 +505,10 @@ internal sealed partial class CultivationService : ICultivationService
         return true;
     }
 
-    private static void RecursiveAddMaterialIngredientsByMaterialId(CultivateProject cultivateProject, ICultivationMetadataContext context, Dictionary<uint, StatisticsCultivateItem> resultItems, MaterialId materialId)
+    private static void RecursiveAddMaterialIngredientsByMaterialId(CultivateProject cultivateProject, ICultivationMetadataContext context, Dictionary<uint, StatisticsCultivateItem> resultItems, MaterialId materialId, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
+
         if (materialId == 104003U)
         {
             foreach (ref readonly MaterialId xpBookId in (ReadOnlySpan<MaterialId>)[104001U, 104002U])
@@ -297,10 +524,165 @@ internal sealed partial class CultivationService : ICultivationService
         {
             foreach (ref readonly IdCount ingredient in combine.Materials.AsSpan())
             {
+                token.ThrowIfCancellationRequested();
                 ref StatisticsCultivateItem? ingredientItem = ref CollectionsMarshal.GetValueRefOrAddDefault(resultItems, ingredient.Id, out _);
                 ingredientItem ??= StatisticsCultivateItem.Create(context.GetMaterial(ingredient.Id), cultivateProject.ServerTimeZoneOffset);
-                RecursiveAddMaterialIngredientsByMaterialId(cultivateProject, context, resultItems, ingredient.Id);
+                RecursiveAddMaterialIngredientsByMaterialId(cultivateProject, context, resultItems, ingredient.Id, token);
             }
         }
+    }
+
+    private static void ApplyStatisticsConsumerMenuLines(
+        Dictionary<uint, StatisticsCultivateItem> resultItems,
+        Guid projectId,
+        ICultivationMetadataContext context,
+        ICultivationRepository cultivationRepository,
+        CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        ImmutableArray<(CultivateEntry Entry, CultivateItem Item)> pairs = cultivationRepository.GetCultivateEntryItemPairsByProjectId(projectId);
+        ImmutableArray<CultivateEntry> projectEntries = cultivationRepository.GetCultivateEntryImmutableArrayByProjectId(projectId);
+        Dictionary<Guid, CultivateEntry> entryByInnerId = new(projectEntries.Length);
+        foreach (ref readonly CultivateEntry e in projectEntries.AsSpan())
+        {
+            entryByInnerId[e.InnerId] = e;
+        }
+
+        Dictionary<uint, List<(string SortKey, StatisticsConsumerMenuLine Line)>> unfinishedRowsByMaterial = [];
+
+        foreach ((CultivateEntry entry, CultivateItem item) in pairs.AsSpan())
+        {
+            token.ThrowIfCancellationRequested();
+            if (item.IsFinished)
+            {
+                continue;
+            }
+
+            string sortKey = $"{FormatStatisticsConsumerEntryName(entry, context, entryByInnerId)}×{item.Count}";
+            StatisticsConsumerMenuLine line = CreateStatisticsConsumerMenuLine(entry, item, context, entryByInnerId);
+            ref List<(string SortKey, StatisticsConsumerMenuLine Line)>? list = ref CollectionsMarshal.GetValueRefOrAddDefault(unfinishedRowsByMaterial, item.ItemId, out _);
+            list ??= [];
+            list.Add((sortKey, line));
+        }
+
+        foreach ((uint materialId, StatisticsCultivateItem stat) in resultItems)
+        {
+            token.ThrowIfCancellationRequested();
+            if (MaterialIds.IsExcludedFromStatisticsConsumerMenu(materialId))
+            {
+                stat.StatisticsConsumerMenuLines = ImmutableArray.Create(StatisticsConsumerMenuLine.Plain(SH.ViewPageCultivationStatisticsConsumerMenuExcluded));
+                continue;
+            }
+
+            if (unfinishedRowsByMaterial.TryGetValue(materialId, out List<(string SortKey, StatisticsConsumerMenuLine Line)>? rows))
+            {
+                rows.Sort(static (a, b) => StringComparer.Ordinal.Compare(a.SortKey, b.SortKey));
+                stat.StatisticsConsumerMenuLines = ImmutableArray.CreateRange(rows.ConvertAll(static r => r.Line));
+            }
+            else
+            {
+                stat.StatisticsConsumerMenuLines = ImmutableArray.Create(StatisticsConsumerMenuLine.Plain(SH.ViewPageCultivationStatisticsUnfinishedConsumersEmptyList));
+            }
+        }
+    }
+
+    private static StatisticsConsumerMenuLine CreateStatisticsConsumerMenuLine(
+        CultivateEntry entry,
+        CultivateItem item,
+        ICultivationMetadataContext context,
+        Dictionary<Guid, CultivateEntry> entryByInnerId)
+    {
+        // 展示用量：全角括号比「×数量」更利落，且与中文混排更协调。
+        string countSuffix = $"\uFF08{item.Count}\uFF09";
+
+        switch (entry.Type)
+        {
+            case CultivateType.AvatarAndSkill:
+            {
+                ModelItem avatarItem = context.GetAvatarItem(entry.Id);
+                return StatisticsConsumerMenuLine.SingleIcon(avatarItem.Icon, avatarItem.Quality, avatarItem.Name, countSuffix);
+            }
+
+            case CultivateType.Weapon:
+            {
+                ModelItem weaponItem = context.GetWeaponItem(entry.Id);
+                if (entry.RelatedEntryId is Guid relatedId
+                    && entryByInnerId.TryGetValue(relatedId, out CultivateEntry? related)
+                    && related.Type is CultivateType.AvatarAndSkill)
+                {
+                    ModelItem avatarItem = context.GetAvatarItem(related.Id);
+                    return StatisticsConsumerMenuLine.AvatarAndWeapon(
+                        avatarItem.Icon,
+                        avatarItem.Quality,
+                        avatarItem.Name,
+                        weaponItem.Icon,
+                        weaponItem.Quality,
+                        weaponItem.Name,
+                        countSuffix);
+                }
+
+                return StatisticsConsumerMenuLine.SingleIcon(weaponItem.Icon, weaponItem.Quality, weaponItem.Name, countSuffix);
+            }
+
+            default:
+                return StatisticsConsumerMenuLine.Plain($"{Material.Default.Name}{countSuffix}");
+        }
+    }
+
+    private static string FormatStatisticsConsumerEntryName(
+        CultivateEntry entry,
+        ICultivationMetadataContext context,
+        Dictionary<Guid, CultivateEntry> entryByInnerId)
+    {
+        return entry.Type switch
+        {
+            CultivateType.AvatarAndSkill => context.GetAvatarItem(entry.Id).Name,
+            CultivateType.Weapon => FormatStatisticsConsumerWeaponEntryName(entry, context, entryByInnerId),
+            _ => Material.Default.Name,
+        };
+    }
+
+    /// <summary>
+    /// 材料统计右键「未完成」：武器条目在有关联角色条目时展示「角色名·武器名」，否则（含历史无 RelatedEntryId）仅武器名。
+    /// </summary>
+    private static string FormatStatisticsConsumerWeaponEntryName(
+        CultivateEntry entry,
+        ICultivationMetadataContext context,
+        Dictionary<Guid, CultivateEntry> entryByInnerId)
+    {
+        string weaponName = context.GetWeaponItem(entry.Id).Name;
+        if (entry.RelatedEntryId is not Guid relatedId)
+        {
+            return weaponName;
+        }
+
+        if (!entryByInnerId.TryGetValue(relatedId, out CultivateEntry? related) || related.Type is not CultivateType.AvatarAndSkill)
+        {
+            return weaponName;
+        }
+
+        string avatarName = context.GetAvatarItem(related.Id).Name;
+        return $"{avatarName}·{weaponName}";
+    }
+
+    /// <summary>
+    /// 无材料的「已满配」角色占位行不在养成列表展示（仍为武器的 RelatedEntryId 解析目标）。
+    /// </summary>
+    private static bool IsHiddenAssociationOnlyAvatarEntry(CultivateEntry entry, int cultivateItemCount)
+    {
+        if (entry.Type is not CultivateType.AvatarAndSkill || cultivateItemCount != 0)
+        {
+            return false;
+        }
+
+        if (entry.LevelInformation is not CultivateEntryLevelInformation li)
+        {
+            return false;
+        }
+
+        return li.AvatarLevelFrom == li.AvatarLevelTo
+            && li.SkillALevelFrom == li.SkillALevelTo
+            && li.SkillELevelFrom == li.SkillELevelTo
+            && li.SkillQLevelFrom == li.SkillQLevelTo;
     }
 }

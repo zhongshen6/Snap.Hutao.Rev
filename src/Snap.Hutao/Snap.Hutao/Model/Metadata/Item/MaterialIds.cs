@@ -10,6 +10,18 @@ namespace Snap.Hutao.Model.Metadata.Item;
 
 internal static class MaterialIds
 {
+    /// <summary>
+    /// 材料统计右键「未完成条目」不追溯的材料（摩拉、经验书、精锻用魔矿）。
+    /// </summary>
+    public static bool IsExcludedFromStatisticsConsumerMenu(uint materialId)
+    {
+        return materialId is Mora
+            or WanderersAdvice
+            or AdventurersExperience
+            or HeroesWit
+            or MysticEnhancementOre;
+    }
+
     public const uint Mora = 202U;                       // 摩拉
     public const uint WanderersAdvice = 104001U;         // 流浪者的经验
     public const uint AdventurersExperience = 104002U;   // 冒险家的经验

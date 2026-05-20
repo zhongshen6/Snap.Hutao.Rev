@@ -14,7 +14,7 @@ namespace Snap.Hutao.ViewModel.Cultivation;
 
 internal sealed partial class CultivateEntryView : Item, IPropertyValuesProvider
 {
-    private CultivateEntryView(CultivateEntry entry, Item item, ImmutableArray<CultivateItemView> items)
+    private CultivateEntryView(CultivateEntry entry, Item item, ImmutableArray<CultivateItemView> items, string? relatedAvatarName)
     {
         Id = entry.Id;
         EntryId = entry.InnerId;
@@ -24,6 +24,8 @@ internal sealed partial class CultivateEntryView : Item, IPropertyValuesProvider
         Quality = item.Quality;
         Items = items;
         Type = entry.Type;
+
+        RelatedAvatarLine = relatedAvatarName is { } name ? SH.FormatViewModelCultivationEntryRelatedAvatar(name) : null;
 
         Description = ParseDescription(entry);
         IsToday = items.Any(i => i.IsToday);
@@ -110,12 +112,17 @@ internal sealed partial class CultivateEntryView : Item, IPropertyValuesProvider
 
     public string Description { get; }
 
+    /// <summary>
+    /// 武器条目在养成计算中与角色条目关联时的展示文案（含本地化前缀）。
+    /// </summary>
+    public string? RelatedAvatarLine { get; }
+
     internal Guid EntryId { get; }
 
     internal CultivateType Type { get; }
 
-    public static CultivateEntryView Create(CultivateEntry entry, Item item, ImmutableArray<CultivateItemView> items)
+    public static CultivateEntryView Create(CultivateEntry entry, Item item, ImmutableArray<CultivateItemView> items, string? relatedAvatarName = null)
     {
-        return new(entry, item, items);
+        return new(entry, item, items, relatedAvatarName);
     }
 }

@@ -74,6 +74,10 @@ internal static class SettingKeys
     public const string CultivationWeapon90LevelCurrent         = "Snap::Hutao::Cultivation::Weapon90::Level::Current";
     public const string CultivationWeapon90LevelTarget          = "Snap::Hutao::Cultivation::Weapon90::Level::Target";
     public const string ResinStatisticsSelectedDropDistribution = "Snap::Hutao::Cultivation::ResinStatistics::DropDistribution";
+    public const string CultivationStatisticsMergeUpgradeMaterials      = "Snap::Hutao::Cultivation::Statistics::MergeUpgradeMaterials";
+    public const string CultivationStatisticsTalentSynthCritTenPercent = "Snap::Hutao::Cultivation::Statistics::TalentSynthCritTenPercent";
+    public const string CultivationStatisticsWeeklyBossMaterialInterchange = "Snap::Hutao::Cultivation::Statistics::WeeklyBossMaterialInterchange";
+    public const string CultivationRefreshInventoryByCalculatorToAllProjects = "Snap::Hutao::Cultivation::RefreshInventory::ByCalculator::ToAllProjects";
 
     // GachaLog
     public const string IsEmptyHistoryWishVisible   = "Snap::Hutao::GachaLog::HistoryWish::EmptyVisible";

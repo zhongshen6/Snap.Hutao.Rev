@@ -9,24 +9,26 @@ using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.ContentDialog;
 using Snap.Hutao.Model;
 using Snap.Hutao.Model.Calculable;
+using Snap.Hutao.Model.Cultivation;
 using Snap.Hutao.Model.Entity.Primitive;
 using Snap.Hutao.Service;
 using Snap.Hutao.Service.AvatarInfo;
 using Snap.Hutao.Service.AvatarInfo.Factory;
 using Snap.Hutao.Service.Cultivation;
 using Snap.Hutao.Service.Cultivation.Consumption;
+using BatchCultivateResult = Snap.Hutao.Service.Cultivation.BatchCultivateResult;
 using Snap.Hutao.Service.Cultivation.Offline;
 using Snap.Hutao.Service.Metadata.ContextAbstraction;
 using Snap.Hutao.Service.Notification;
 using Snap.Hutao.Service.User;
 using Snap.Hutao.UI.Xaml.Control.AutoSuggestBox;
 using Snap.Hutao.UI.Xaml.View.Dialog;
+using Snap.Hutao.ViewModel.Cultivation;
 using Snap.Hutao.ViewModel.User;
 using Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using CalculatorAvatarPromotionDelta = Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate.AvatarPromotionDelta;
 using CalculatorBatchConsumption = Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate.BatchConsumption;
 using CalculatorConsumption = Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate.Consumption;
 using CalculatorItemHelper = Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate.ItemHelper;
@@ -39,6 +41,7 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
 {
     private readonly ExclusiveTokenProvider refreshTokenProvider = new();
     private readonly AvatarPropertyViewModelScopeContext scopeContext;
+    private readonly IAvatarPropertyBatchCultivateService avatarPropertyBatchCultivateService;
 
     private SummaryFactoryMetadataContext? metadataContext;
 
@@ -268,51 +271,23 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             targetAvatars = [.. avatars.Source];
         }
 
-        CultivatePromotionDeltaBatchDialog dialog = await scopeContext.ContentDialogFactory
-            .CreateInstanceAsync<CultivatePromotionDeltaBatchDialog>(scopeContext.ServiceProvider)
+        ArgumentNullException.ThrowIfNull(metadataContext);
+        BatchCultivateResult? batchResult = await avatarPropertyBatchCultivateService
+            .ExecuteAsync(metadataContext, targetAvatars, CancellationToken)
             .ConfigureAwait(false);
 
-        if (await dialog.GetPromotionDeltaBaselineAsync().ConfigureAwait(false) is not (true, { } baseline))
+        if (batchResult is not { } result)
         {
             return;
         }
 
-        ArgumentNullException.ThrowIfNull(baseline.Delta.Weapon);
-
-        ContentDialog progressDialog = await scopeContext.ContentDialogFactory
-            .CreateForIndeterminateProgressAsync(SH.ViewModelAvatarPropertyBatchCultivateProgressTitle)
-            .ConfigureAwait(false);
-
-        BatchCultivateResult result = default;
-        using (await scopeContext.ContentDialogFactory.BlockAsync(progressDialog).ConfigureAwait(false))
+        if (result.StopReason is not BatchCultivateStopReason.None)
         {
-            ImmutableArray<CalculatorAvatarPromotionDelta>.Builder deltasBuilder = ImmutableArray.CreateBuilder<CalculatorAvatarPromotionDelta>();
-            foreach (AvatarView avatar in targetAvatars)
-            {
-                if (!baseline.Delta.TryGetNonErrorCopy(avatar, out CalculatorAvatarPromotionDelta? copy))
-                {
-                    ++result.SkippedCount;
-                    continue;
-                }
-
-                deltasBuilder.Add(copy);
-            }
-
-            ImmutableArray<CalculatorAvatarPromotionDelta> deltas = deltasBuilder.ToImmutable();
-
-            ArgumentNullException.ThrowIfNull(metadataContext);
-            CalculatorBatchConsumption batchConsumption = OfflineCalculator.CalculateBatchConsumption(deltas, metadataContext);
-
-            foreach ((CalculatorConsumption consumption, CalculatorAvatarPromotionDelta delta) in batchConsumption.Items.Zip(deltas))
-            {
-                if (!await SaveCultivationAsync(consumption, new(delta, baseline.Strategy), true).ConfigureAwait(false))
-                {
-                    break;
-                }
-
-                ++result.SucceedCount;
-            }
+            scopeContext.Messenger.Send(InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning));
+            return;
         }
+
+        scopeContext.Messenger.Send(CultivationProjectEntriesChangedMessage.Empty);
 
         InfoBarMessage message = result.SkippedCount > 0
             ? InfoBarMessage.Warning(SH.FormatViewModelCultivationBatchAddIncompleted(result.SucceedCount, result.SkippedCount))
@@ -335,9 +310,9 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             Strategy = options.Strategy,
         };
 
-        ConsumptionSaveResultKind avatarSaveKind = await scopeContext.CultivationService.SaveConsumptionAsync(avatarInput).ConfigureAwait(false);
+        ConsumptionSaveResult avatarSave = await scopeContext.CultivationService.SaveConsumptionAsync(avatarInput).ConfigureAwait(false);
 
-        InfoBarMessage? avatarMessage = avatarSaveKind switch
+        InfoBarMessage? avatarMessage = avatarSave.Kind switch
         {
             ConsumptionSaveResultKind.NoProject => InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning),
             ConsumptionSaveResultKind.Skipped => isBatch ? default : InfoBarMessage.Information(SH.ViewModelCultivationConsumptionSaveSkippedHint),
@@ -351,12 +326,28 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             scopeContext.Messenger.Send(avatarMessage);
         }
 
-        if (avatarSaveKind is ConsumptionSaveResultKind.NoProject)
+        if (avatarSave.Kind is ConsumptionSaveResultKind.NoProject)
         {
             return false;
         }
 
         ArgumentNullException.ThrowIfNull(options.Delta.Weapon);
+
+        Guid? relatedAvatarEntryId = avatarSave.CreatedEntryInnerId;
+        if (relatedAvatarEntryId is null && avatarSave.Kind is ConsumptionSaveResultKind.Skipped)
+        {
+            relatedAvatarEntryId = await scopeContext.CultivationService.TryGetAvatarCultivateEntryInnerIdAsync(options.Delta.AvatarId).ConfigureAwait(false);
+        }
+
+        if (relatedAvatarEntryId is null && avatarSave.Kind is ConsumptionSaveResultKind.NoItem)
+        {
+            relatedAvatarEntryId = await scopeContext.CultivationService.TryGetAvatarCultivateEntryInnerIdAsync(options.Delta.AvatarId).ConfigureAwait(false);
+        }
+
+        if (relatedAvatarEntryId is null && !consumption.WeaponConsume.IsEmpty)
+        {
+            relatedAvatarEntryId = await scopeContext.CultivationService.EnsureAvatarAssociationStubAsync(options.Delta.AvatarId, levelInformation).ConfigureAwait(false);
+        }
 
         InputConsumption weaponInput = new()
         {
@@ -365,10 +356,11 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             Items = consumption.WeaponConsume,
             LevelInformation = levelInformation,
             Strategy = options.Strategy,
+            RelatedEntryId = relatedAvatarEntryId,
         };
 
-        ConsumptionSaveResultKind weaponSaveKind = await scopeContext.CultivationService.SaveConsumptionAsync(weaponInput).ConfigureAwait(false);
-        InfoBarMessage? weaponMessage = weaponSaveKind switch
+        ConsumptionSaveResult weaponSave = await scopeContext.CultivationService.SaveConsumptionAsync(weaponInput).ConfigureAwait(false);
+        InfoBarMessage? weaponMessage = weaponSave.Kind switch
         {
             ConsumptionSaveResultKind.NoProject => InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning),
             ConsumptionSaveResultKind.Skipped => isBatch ? default : InfoBarMessage.Information(SH.ViewModelCultivationConsumptionSaveSkippedHint),
@@ -382,7 +374,7 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
             scopeContext.Messenger.Send(weaponMessage);
         }
 
-        return weaponSaveKind is not ConsumptionSaveResultKind.NoProject;
+        return weaponSave.Kind is not ConsumptionSaveResultKind.NoProject;
     }
 
     [Command("ExportToTextCommand")]

@@ -22,6 +22,11 @@ internal sealed partial class CultivateProject : ISelectable,
 
     public TimeSpan ServerTimeZoneOffset { get; set; }
 
+    /// <summary>
+    /// <see cref="Model.Cultivation.CultivateProjectAvatarPropertyBatchPreferences"/> 的 JSON，按项目记忆批量同步养成选项。
+    /// </summary>
+    public string? AvatarPropertyBatchCultivatePreferencesJson { get; set; }
+
     public static CultivateProject From(string name, in TimeSpan serverTimeOffset)
     {
         return new()

@@ -14,7 +14,8 @@ internal interface ICultivationMetadataContext : IMetadataContext,
     IMetadataDictionaryIdMaterialSource,
     IMetadataDictionaryIdAvatarSource,
     IMetadataDictionaryIdWeaponSource,
-    IMetadataDictionaryResultMaterialIdCombineSource
+    IMetadataDictionaryResultMaterialIdCombineSource,
+    IMetadataWeeklyBossMaterialInterchangeGroupsSource
 {
     Item GetAvatarItem(AvatarId avatarId);
 

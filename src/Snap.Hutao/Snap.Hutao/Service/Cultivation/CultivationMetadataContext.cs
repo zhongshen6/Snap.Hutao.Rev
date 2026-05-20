@@ -23,6 +23,9 @@ internal class CultivationMetadataContext : ICultivationMetadataContext
 
     public ImmutableDictionary<MaterialId, Combine> ResultMaterialIdCombineMap { get; set; } = default!;
 
+    public ImmutableArray<ImmutableArray<MaterialId>> WeeklyBossMaterialInterchangeGroups { get; set; }
+        = ImmutableArray<ImmutableArray<MaterialId>>.Empty;
+
     public Item GetAvatarItem(AvatarId avatarId)
     {
         return this.GetAvatar(avatarId).GetOrCreateItem();

@@ -146,7 +146,7 @@ internal sealed partial class WikiWeaponViewModel : Abstraction.ViewModel
                 Strategy = deltaOptions.Strategy,
             };
 
-            InfoBarMessage? message = await cultivationService.SaveConsumptionAsync(input).ConfigureAwait(false) switch
+            InfoBarMessage? message = (await cultivationService.SaveConsumptionAsync(input).ConfigureAwait(false)).Kind switch
             {
                 ConsumptionSaveResultKind.NoProject => InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning),
                 ConsumptionSaveResultKind.Skipped => InfoBarMessage.Information(SH.ViewModelCultivationConsumptionSaveSkippedHint),

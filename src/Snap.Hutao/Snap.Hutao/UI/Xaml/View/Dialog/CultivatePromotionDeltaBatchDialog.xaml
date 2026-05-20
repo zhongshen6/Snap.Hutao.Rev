@@ -20,7 +20,9 @@
         <x:Double x:Key="SettingsCardWrapThreshold">0</x:Double>
         <x:Double x:Key="SettingsCardWrapNoIconThreshold">0</x:Double>
     </ContentDialog.Resources>
-    <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+    <!-- ScrollViewer：随 ContentDialog 主题高度上限自适应；内容过高时纵向滚动，避免裁切或写死 MaxHeight -->
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
         <cwc:SettingsCard Header="{shuxm:ResourceString Name=ViewDialogCultivateBatchAvatarLevelTarget}">
             <NumberBox
                 MinWidth="{StaticResource NumberBoxMinWidth}"
@@ -77,5 +79,19 @@
             <RadioButton Content="{shuxm:ResourceString Name=ViewDialogCultivationConsumptionSaveStrategyOverwriteExisting}"/>
             <RadioButton Content="{shuxm:ResourceString Name=ViewDialogCultivationConsumptionSaveStrategyCreateNewEntry}"/>
         </RadioButtons>
-    </StackPanel>
+
+        <CheckBox
+            Margin="0,13,0,0"
+            Content="{shuxm:ResourceString Name=ViewDialogCultivateBatchClearAvatarAndWeaponEntries}"
+            IsChecked="{x:Bind ClearAvatarAndWeaponEntriesBeforeSync, Mode=TwoWay}"/>
+        <CheckBox
+            Margin="0,6,0,0"
+            Content="{shuxm:ResourceString Name=ViewPageCultivationRefreshInventory}"
+            IsChecked="{x:Bind SyncInventoryItems, Mode=TwoWay}"/>
+        <CheckBox
+            Margin="0,6,0,0"
+            Content="{shuxm:ResourceString Name=ViewAvatarPropertySyncDataButtonLabel}"
+            IsChecked="{x:Bind SyncCharacterInfo, Mode=TwoWay}"/>
+        </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

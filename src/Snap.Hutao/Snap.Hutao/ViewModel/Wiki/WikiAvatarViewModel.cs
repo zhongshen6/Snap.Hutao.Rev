@@ -155,7 +155,7 @@ internal sealed partial class WikiAvatarViewModel : Abstraction.ViewModel
                 Strategy = deltaOptions.Strategy,
             };
 
-            InfoBarMessage? message = await cultivationService.SaveConsumptionAsync(input).ConfigureAwait(false) switch
+            InfoBarMessage? message = (await cultivationService.SaveConsumptionAsync(input).ConfigureAwait(false)).Kind switch
             {
                 ConsumptionSaveResultKind.NoProject => InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning),
                 ConsumptionSaveResultKind.Skipped => InfoBarMessage.Information(SH.ViewModelCultivationConsumptionSaveSkippedHint),

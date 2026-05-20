@@ -211,6 +211,11 @@ internal static class MetadataServiceContextExtension
                 {
                     dictionaryResultMaterialIdCombineSource.ResultMaterialIdCombineMap = await metadataService.GetResultMaterialIdToCombineMapAsync(token).ConfigureAwait(false);
                 }
+
+                if (context is IMetadataWeeklyBossMaterialInterchangeGroupsSource weeklyBossInterchange)
+                {
+                    weeklyBossInterchange.WeeklyBossMaterialInterchangeGroups = await metadataService.GetWeeklyBossMaterialInterchangeGroupsAsync(token).ConfigureAwait(false);
+                }
             }
 
             if (context is IMetadataSupportInitialization supportInitialization)

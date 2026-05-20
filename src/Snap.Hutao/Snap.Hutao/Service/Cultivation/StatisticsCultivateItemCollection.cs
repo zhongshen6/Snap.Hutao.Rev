@@ -50,7 +50,7 @@ internal sealed partial class StatisticsCultivateItemCollection : ICollection<St
                 return result;
             }
 
-            return MaterialIdComparer.Shared.Compare(x.Inner.Id, y.Inner.Id);
+            return StatisticsCultivateItemComparer.CompareCore(x, y);
         });
     }
 

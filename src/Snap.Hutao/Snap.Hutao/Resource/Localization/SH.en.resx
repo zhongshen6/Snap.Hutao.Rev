@@ -1349,6 +1349,9 @@ Space Available: {2}</value>
   <data name="ViewDialogCultivateBatchWeaponLevelTarget" xml:space="preserve">
     <value>Weapon Target Level</value>
   </data>
+  <data name="ViewDialogCultivateBatchClearAvatarAndWeaponEntries" xml:space="preserve">
+    <value>Clear existing character and weapon entries before updating</value>
+  </data>
   <data name="ViewDialogCultivateProjectInputPlaceholder" xml:space="preserve">
     <value>Enter the plan name here</value>
   </data>
@@ -1879,6 +1882,9 @@ Space Available: {2}</value>
   </data>
   <data name="ViewModelCultivationEntryViewPromoteOnlyHint" xml:space="preserve">
     <value>Ascending only</value>
+  </data>
+  <data name="ViewModelCultivationEntryRelatedAvatar" xml:space="preserve">
+    <value>Linked character: {0}</value>
   </data>
   <data name="ViewModelCultivationProjectAdded" xml:space="preserve">
     <value>Added successfully</value>
@@ -2420,6 +2426,15 @@ Space Available: {2}</value>
   <data name="ViewPageCultivationMaterialListIncompleteFirstLabel" xml:space="preserve">
     <value>Uncollected First</value>
   </data>
+  <data name="ViewPageCultivationMergeUpgradeMaterialsLabel" xml:space="preserve">
+    <value>Merge upgrade materials</value>
+  </data>
+  <data name="ViewPageCultivationTalentSynthCritTenPercentLabel" xml:space="preserve">
+    <value>Character talent (10%)</value>
+  </data>
+  <data name="ViewPageCultivationWeeklyBossMaterialInterchangeLabel" xml:space="preserve">
+    <value>Weekly boss material interchange</value>
+  </data>
   <data name="ViewPageCultivationMaterialListResinStatisticsLabel" xml:space="preserve">
     <value>Resin Estimation</value>
   </data>
@@ -2429,8 +2444,17 @@ Space Available: {2}</value>
   <data name="ViewPageCultivationMaterialStatistics" xml:space="preserve">
     <value>Material Statistics</value>
   </data>
+  <data name="ViewPageCultivationStatisticsUnfinishedConsumersEmptyList" xml:space="preserve">
+    <value>No unchecked entries</value>
+  </data>
+  <data name="ViewPageCultivationStatisticsConsumerMenuExcluded" xml:space="preserve">
+    <value>Mora, EXP books, and Mystic Enhancement Ore have no per-entry breakdown.</value>
+  </data>
   <data name="ViewPageCultivationNavigateAction" xml:space="preserve">
     <value>Go</value>
+  </data>
+  <data name="ViewPageCultivationSyncAllAvatarsAndWeapons" xml:space="preserve">
+    <value>Sync All Characters and Weapons</value>
   </data>
   <data name="ViewPageCultivationRefreshInventory" xml:space="preserve">
     <value>Sync Inventory Items</value>
@@ -2440,6 +2464,9 @@ Space Available: {2}</value>
   </data>
   <data name="ViewPageCultivationRefreshInventoryByEmbeddedYae" xml:space="preserve">
     <value>Sync by Embedded Yae</value>
+  </data>
+  <data name="ViewPageCultivationRefreshInventoryAllPlansShortLabel" xml:space="preserve">
+    <value>Inventory sync affects all plans</value>
   </data>
   <data name="ViewPageCultivationRemoveEntry" xml:space="preserve">
     <value>Delete list</value>

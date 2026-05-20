@@ -2,33 +2,40 @@
 // Licensed under the MIT license.
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.UI.Xaml.Controls;
 using Snap.Hutao.Core;
 using Snap.Hutao.Core.Database;
 using Snap.Hutao.Core.ExceptionService;
 using Snap.Hutao.Core.Logging;
+using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.ContentDialog;
 using Snap.Hutao.Model.Entity;
+using Snap.Hutao.Service.AvatarInfo;
+using Snap.Hutao.Service.AvatarInfo.Factory;
 using Snap.Hutao.Service.Cultivation;
 using Snap.Hutao.Service.Inventory;
 using Snap.Hutao.Service.Metadata;
 using Snap.Hutao.Service.Metadata.ContextAbstraction;
 using Snap.Hutao.Service.Navigation;
 using Snap.Hutao.Service.Notification;
+using Snap.Hutao.Service.User;
 using Snap.Hutao.Service.Yae;
+using Snap.Hutao.ViewModel.AvatarProperty;
 using Snap.Hutao.UI.Xaml.Control.AutoSuggestBox;
 using Snap.Hutao.UI.Xaml.Data;
 using Snap.Hutao.UI.Xaml.View.Dialog;
 using Snap.Hutao.ViewModel.Game;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using BatchCultivateResult = Snap.Hutao.Service.Cultivation.BatchCultivateResult;
 
 namespace Snap.Hutao.ViewModel.Cultivation;
 
 [SuppressMessage("", "CA1001")]
 [BindableCustomPropertyProvider]
 [Service(ServiceLifetime.Scoped)]
-internal sealed partial class CultivationViewModel : Abstraction.ViewModel
+internal sealed partial class CultivationViewModel : Abstraction.ViewModel, IRecipient<CultivationProjectEntriesChangedMessage>
 {
     private readonly ExclusiveTokenProvider exclusiveTokenProvider = new();
 
@@ -36,6 +43,9 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
     private readonly ICultivationService cultivationService;
     private readonly INavigationService navigationService;
     private readonly IInventoryService inventoryService;
+    private readonly IAvatarInfoService avatarInfoService;
+    private readonly IAvatarPropertyBatchCultivateService avatarPropertyBatchCultivateService;
+    private readonly IUserService userService;
     private readonly IServiceProvider serviceProvider;
     private readonly IMetadataService metadataService;
     private readonly ITaskContext taskContext;
@@ -71,6 +81,18 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
     public partial bool IncompleteFirst { get; set; }
 
     [ObservableProperty]
+    public partial bool MergeUpgradeMaterials { get; set; } = LocalSetting.Get(SettingKeys.CultivationStatisticsMergeUpgradeMaterials, false);
+
+    [ObservableProperty]
+    public partial bool TalentSynthCritTenPercent { get; set; } = LocalSetting.Get(SettingKeys.CultivationStatisticsTalentSynthCritTenPercent, false);
+
+    [ObservableProperty]
+    public partial bool WeeklyBossMaterialInterchange { get; set; } = LocalSetting.Get(SettingKeys.CultivationStatisticsWeeklyBossMaterialInterchange, false);
+
+    [ObservableProperty]
+    public partial bool SyncInventoryByCalculatorToAllProjects { get; set; } = LocalSetting.Get(SettingKeys.CultivationRefreshInventoryByCalculatorToAllProjects, false);
+
+    [ObservableProperty]
     public partial ObservableCollection<StatisticsCultivateItem>? StatisticsItems { get; set; }
 
     [ObservableProperty]
@@ -81,6 +103,9 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
 
     protected override async ValueTask<bool> LoadOverrideAsync(CancellationToken token)
     {
+        messenger.UnregisterAll(this);
+        messenger.Register<CultivationProjectEntriesChangedMessage>(this);
+
         if (!await metadataService.InitializeAsync().ConfigureAwait(false))
         {
             return false;
@@ -111,6 +136,7 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
 
     protected override void UninitializeOverride()
     {
+        messenger.UnregisterAll(this);
         using (Projects?.SuppressChangeCurrentItem())
         {
             Projects = default;
@@ -120,6 +146,27 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
     private void OnCurrentProjectChanged(object? sender, object? e)
     {
         UpdateEntryCollectionAsync(Projects?.CurrentItem).SafeForget();
+    }
+
+    partial void OnSyncInventoryByCalculatorToAllProjectsChanged(bool value)
+    {
+        LocalSetting.Set(SettingKeys.CultivationRefreshInventoryByCalculatorToAllProjects, value);
+    }
+
+    public void Receive(CultivationProjectEntriesChangedMessage _)
+    {
+        ReceiveProjectEntriesChangedAsync().SafeForget();
+    }
+
+    private async ValueTask ReceiveProjectEntriesChangedAsync()
+    {
+        await taskContext.SwitchToMainThreadAsync();
+        if (Projects?.CurrentItem is null)
+        {
+            return;
+        }
+
+        await UpdateEntryCollectionAsync(Projects.CurrentItem).ConfigureAwait(false);
     }
 
     [Command("AddProjectCommand")]
@@ -292,12 +339,71 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
 
             using (await contentDialogFactory.BlockAsync(dialog).ConfigureAwait(false))
             {
-                await inventoryService.RefreshInventoryAsync(RefreshOptions.CreateForWebCalculator(Projects.CurrentItem, metadataContext)).ConfigureAwait(false);
+                await inventoryService
+                    .RefreshInventoryAsync(RefreshOptions.CreateForWebCalculator(Projects.CurrentItem, metadataContext, SyncInventoryByCalculatorToAllProjects))
+                    .ConfigureAwait(false);
 
                 await UpdateInventoryItemsAsync().ConfigureAwait(false);
                 await UpdateStatisticsItemsAsync().ConfigureAwait(false);
             }
         }
+    }
+
+    [Command("SyncAllAvatarsAndWeaponsCommand")]
+    private async Task SyncAllAvatarsAndWeaponsAsync()
+    {
+        SentrySdk.AddBreadcrumb(BreadcrumbFactory2.CreateUI("Sync all avatars and weapons to cultivation", "CultivationViewModel.Command", []));
+
+        if (Projects?.CurrentItem is null)
+        {
+            return;
+        }
+
+        if (await userService.GetCurrentUserAndUidAsync().ConfigureAwait(false) is not { } userAndUid)
+        {
+            messenger.Send(InfoBarMessage.Warning(SH.MustSelectUserAndUid));
+            return;
+        }
+
+        SummaryFactoryMetadataContext summaryContext = await metadataService.GetContextAsync<SummaryFactoryMetadataContext>(CancellationToken).ConfigureAwait(false);
+        Summary? summary = await avatarInfoService.GetSummaryAsync(summaryContext, userAndUid, global::Snap.Hutao.Service.AvatarInfo.RefreshOptionKind.None, CancellationToken).ConfigureAwait(false);
+
+        if (summary is not { Avatars: { } avatars })
+        {
+            messenger.Send(InfoBarMessage.Warning(SH.ViewPageAvatarPropertyDefaultDescription));
+            return;
+        }
+
+        if (avatars.Source.Count < 1)
+        {
+            messenger.Send(InfoBarMessage.Warning(SH.ViewPageAvatarPropertyDefaultDescription));
+            return;
+        }
+
+        ImmutableArray<AvatarView> targetAvatars = [.. avatars.Source];
+
+        BatchCultivateResult? batchResult = await avatarPropertyBatchCultivateService
+            .ExecuteAsync(summaryContext, targetAvatars, CancellationToken)
+            .ConfigureAwait(false);
+
+        if (batchResult is not { } result)
+        {
+            return;
+        }
+
+        if (result.StopReason is not BatchCultivateStopReason.None)
+        {
+            messenger.Send(InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning));
+            return;
+        }
+
+        messenger.Send(CultivationProjectEntriesChangedMessage.Empty);
+
+        InfoBarMessage message = result.SkippedCount > 0
+            ? InfoBarMessage.Warning(SH.FormatViewModelCultivationBatchAddIncompleted(result.SucceedCount, result.SkippedCount))
+            : InfoBarMessage.Success(SH.FormatViewModelCultivationBatchAddCompleted(result.SucceedCount, result.SkippedCount));
+
+        messenger.Send(message);
     }
 
     [Command("ClearInventoryCommand")]
@@ -356,12 +462,21 @@ internal sealed partial class CultivationViewModel : Abstraction.ViewModel
 
         await taskContext.SwitchToBackgroundAsync();
 
+        bool merge = MergeUpgradeMaterials;
+        bool talentCrit = merge && TalentSynthCritTenPercent;
+        bool weeklyBoss = WeeklyBossMaterialInterchange;
+        LocalSetting.Set(SettingKeys.CultivationStatisticsMergeUpgradeMaterials, merge);
+        LocalSetting.Set(SettingKeys.CultivationStatisticsTalentSynthCritTenPercent, talentCrit);
+        LocalSetting.Set(SettingKeys.CultivationStatisticsWeeklyBossMaterialInterchange, weeklyBoss);
+
         CancellationToken token = exclusiveTokenProvider.GetNewToken();
         StatisticsCultivateItemCollection statistics;
         ResinStatistics resinStatistics;
         try
         {
-            statistics = await cultivationService.GetStatisticsCultivateItemCollectionAsync(Projects.CurrentItem, metadataContext, token).ConfigureAwait(false);
+            statistics = await cultivationService
+                .GetStatisticsCultivateItemCollectionAsync(Projects.CurrentItem, metadataContext, new CultivationStatisticsMergeOptions(merge, talentCrit, weeklyBoss), token)
+                .ConfigureAwait(false);
             resinStatistics = await cultivationService.GetResinStatisticsAsync(statistics, token).ConfigureAwait(false);
         }
         catch (OperationCanceledException)

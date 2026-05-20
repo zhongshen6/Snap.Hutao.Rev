@@ -90,6 +90,7 @@ internal sealed partial class AppDbContext : DbContext
     {
         modelBuilder
             .ApplyConfiguration(new AvatarInfoConfiguration())
+            .ApplyConfiguration(new CultivateEntryConfiguration())
             .ApplyConfiguration(new DailyNoteEntryConfiguration())
             .ApplyConfiguration(new SpiralAbyssEntryConfiguration())
             .ApplyConfiguration(new RoleCombatEntryConfiguration())

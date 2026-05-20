@@ -26,6 +26,11 @@ internal sealed class CultivateEntry : IAppDbEntity
 
     public uint Id { get; set; }
 
+    public Guid? RelatedEntryId { get; set; }
+
+    [ForeignKey(nameof(RelatedEntryId))]
+    public CultivateEntry? RelatedEntry { get; set; }
+
     public static CultivateEntry From(Guid projectId, CultivateType type, uint id)
     {
         return new()

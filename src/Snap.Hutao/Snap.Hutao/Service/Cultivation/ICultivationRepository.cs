@@ -27,6 +27,8 @@ internal interface ICultivationRepository : IRepository<CultivateEntryLevelInfor
 
     ObservableCollection<CultivateProject> GetCultivateProjectCollection();
 
+    ImmutableArray<Guid> GetCultivateProjectInnerIds();
+
     CultivateProject? GetCultivateProjectById(Guid projectId);
 
     void AddCultivateEntry(CultivateEntry entry);
@@ -43,5 +45,16 @@ internal interface ICultivationRepository : IRepository<CultivateEntryLevelInfor
 
     ImmutableArray<CultivateEntry> GetCultivateEntryImmutableArrayByProjectIdAndItemId(Guid projectId, uint itemId);
 
+    /// <summary>
+    /// 解析当前计划中指定角色的养成条目（类型为 CultivateType.AvatarAndSkill）。
+    /// 若存在多条历史记录，取最近插入数据库的一条（按 SQLite rowid 倒序）。
+    /// </summary>
+    Guid? TryGetAvatarCultivateEntryInnerId(Guid projectId, uint avatarId);
+
     Guid GetCultivateProjectIdByEntryId(Guid entryId);
+
+    /// <summary>
+    /// 联表查询某计划下所有养成物品及其所属条目（用于材料统计未勾选条目等）。
+    /// </summary>
+    ImmutableArray<(CultivateEntry Entry, CultivateItem Item)> GetCultivateEntryItemPairsByProjectId(Guid projectId);
 }

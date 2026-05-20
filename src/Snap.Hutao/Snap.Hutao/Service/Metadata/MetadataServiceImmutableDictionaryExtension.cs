@@ -13,6 +13,7 @@ using Snap.Hutao.Model.Metadata.Reliquary;
 using Snap.Hutao.Model.Metadata.Tower;
 using Snap.Hutao.Model.Metadata.Weapon;
 using Snap.Hutao.Model.Primitive;
+using Snap.Hutao.Service.Cultivation;
 using System.Collections.Immutable;
 
 namespace Snap.Hutao.Service.Metadata;
@@ -216,12 +217,29 @@ internal static class MetadataServiceImmutableDictionaryExtension
                 token);
         }
 
-        public ValueTask<ImmutableDictionary<MaterialId, Combine>> GetResultMaterialIdToCombineMapAsync(CancellationToken token = default)
+        public async ValueTask<ImmutableDictionary<MaterialId, Combine>> GetResultMaterialIdToCombineMapAsync(CancellationToken token = default)
         {
-            return metadataService.FromCacheAsDictionaryAsync<MaterialId, Combine>(
-                MetadataFileStrategies.Combine,
-                c => c.Result.Id,
-                token);
+            string cacheKey = $"{nameof(MetadataService)}.Cache.{MetadataFileStrategies.Combine.Name}.Map.{nameof(MaterialId)}.{nameof(Combine)}.PreferThreeToOne";
+            ImmutableDictionary<MaterialId, Combine>? result = await metadataService.MemoryCache.GetOrCreateAsync(cacheKey, async entry =>
+            {
+                ImmutableArray<Combine> array = await metadataService.FromCacheOrFileAsync<Combine>(MetadataFileStrategies.Combine, token).ConfigureAwait(false);
+                return CombineResultMaterialIdMapFactory.ToImmutableDictionary(array);
+            }).ConfigureAwait(false);
+
+            ArgumentNullException.ThrowIfNull(result);
+            return result;
+        }
+
+        public async ValueTask<ImmutableArray<ImmutableArray<MaterialId>>> GetWeeklyBossMaterialInterchangeGroupsAsync(CancellationToken token = default)
+        {
+            string cacheKey = $"{nameof(MetadataService)}.Cache.{MetadataFileStrategies.Combine.Name}.WeeklyBossMaterialInterchangeGroups";
+            ImmutableArray<ImmutableArray<MaterialId>>? result = await metadataService.MemoryCache.GetOrCreateAsync(cacheKey, async entry =>
+            {
+                ImmutableArray<Combine> array = await metadataService.FromCacheOrFileAsync<Combine>(MetadataFileStrategies.Combine, token).ConfigureAwait(false);
+                return WeeklyBossMaterialInterchangeGroupsBuilder.Build(array);
+            }).ConfigureAwait(false);
+
+            return result ?? ImmutableArray<ImmutableArray<MaterialId>>.Empty;
         }
 
         private ValueTask<ImmutableDictionary<TKey, TValue>> FromCacheAsDictionaryAsync<TKey, TValue>(MetadataFileStrategy strategy, CancellationToken token)

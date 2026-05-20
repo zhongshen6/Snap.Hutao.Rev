@@ -1391,6 +1391,9 @@
   <data name="ViewDialogCultivateBatchWeaponLevelTarget" xml:space="preserve">
     <value>武器目标等级</value>
   </data>
+  <data name="ViewDialogCultivateBatchClearAvatarAndWeaponEntries" xml:space="preserve">
+    <value>更新计划前先清空已有角色与武器条目</value>
+  </data>
   <data name="ViewDialogCultivateProjectInputPlaceholder" xml:space="preserve">
     <value>在此处输入计划名称</value>
   </data>
@@ -1930,6 +1933,9 @@
   </data>
   <data name="ViewModelCultivationEntryViewPromoteOnlyHint" xml:space="preserve">
     <value>仅突破</value>
+  </data>
+  <data name="ViewModelCultivationEntryRelatedAvatar" xml:space="preserve">
+    <value>关联角色：{0}</value>
   </data>
   <data name="ViewModelCultivationProjectAdded" xml:space="preserve">
     <value>添加成功</value>
@@ -2471,6 +2477,15 @@
   <data name="ViewPageCultivationMaterialListIncompleteFirstLabel" xml:space="preserve">
     <value>未集齐优先</value>
   </data>
+  <data name="ViewPageCultivationMergeUpgradeMaterialsLabel" xml:space="preserve">
+    <value>升级材料合并</value>
+  </data>
+  <data name="ViewPageCultivationTalentSynthCritTenPercentLabel" xml:space="preserve">
+    <value>角色天赋（10%）</value>
+  </data>
+  <data name="ViewPageCultivationWeeklyBossMaterialInterchangeLabel" xml:space="preserve">
+    <value>周本材料转化</value>
+  </data>
   <data name="ViewPageCultivationMaterialListResinStatisticsLabel" xml:space="preserve">
     <value>树脂预估</value>
   </data>
@@ -2480,8 +2495,17 @@
   <data name="ViewPageCultivationMaterialStatistics" xml:space="preserve">
     <value>材料统计</value>
   </data>
+  <data name="ViewPageCultivationStatisticsUnfinishedConsumersEmptyList" xml:space="preserve">
+    <value>无未勾选条目</value>
+  </data>
+  <data name="ViewPageCultivationStatisticsConsumerMenuExcluded" xml:space="preserve">
+    <value>摩拉、经验书与魔矿不显示未完成条目。</value>
+  </data>
   <data name="ViewPageCultivationNavigateAction" xml:space="preserve">
     <value>前往</value>
+  </data>
+  <data name="ViewPageCultivationSyncAllAvatarsAndWeapons" xml:space="preserve">
+    <value>同步所有角色与武器</value>
   </data>
   <data name="ViewPageCultivationRefreshInventory" xml:space="preserve">
     <value>同步背包物品</value>
@@ -2491,6 +2515,9 @@
   </data>
   <data name="ViewPageCultivationRefreshInventoryByEmbeddedYae" xml:space="preserve">
     <value>通过 Embedded Yae 同步</value>
+  </data>
+  <data name="ViewPageCultivationRefreshInventoryAllPlansShortLabel" xml:space="preserve">
+    <value>背包同步影响所有计划</value>
   </data>
   <data name="ViewPageCultivationRemoveEntry" xml:space="preserve">
     <value>删除清单</value>

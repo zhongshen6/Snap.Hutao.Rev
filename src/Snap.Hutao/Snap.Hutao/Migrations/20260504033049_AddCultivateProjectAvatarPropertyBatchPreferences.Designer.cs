@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Snap.Hutao.Model.Entity.Database;
 
@@ -10,9 +11,11 @@ using Snap.Hutao.Model.Entity.Database;
 namespace Snap.Hutao.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260504033049_AddCultivateProjectAvatarPropertyBatchPreferences")]
+    partial class AddCultivateProjectAvatarPropertyBatchPreferences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -595,8 +598,7 @@ namespace Snap.Hutao.Migrations
 
                     b.HasOne("Snap.Hutao.Model.Entity.CultivateEntry", "RelatedEntry")
                         .WithMany()
-                        .HasForeignKey("RelatedEntryId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("RelatedEntryId");
 
                     b.Navigation("Project");
 

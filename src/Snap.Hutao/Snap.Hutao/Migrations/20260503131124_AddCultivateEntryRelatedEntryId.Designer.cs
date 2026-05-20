@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Snap.Hutao.Model.Entity.Database;
 
@@ -10,9 +11,11 @@ using Snap.Hutao.Model.Entity.Database;
 namespace Snap.Hutao.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260503131124_AddCultivateEntryRelatedEntryId")]
+    partial class AddCultivateEntryRelatedEntryId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -210,9 +213,6 @@ namespace Snap.Hutao.Migrations
                 {
                     b.Property<Guid>("InnerId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AvatarPropertyBatchCultivatePreferencesJson")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsSelected")

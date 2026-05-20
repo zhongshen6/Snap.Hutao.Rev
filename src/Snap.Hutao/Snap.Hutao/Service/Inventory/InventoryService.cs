@@ -23,6 +23,7 @@ internal sealed partial class InventoryService : IInventoryService
     private readonly PromotionDeltaFactory promotionDeltaFactory;
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly IInventoryRepository inventoryRepository;
+    private readonly ICultivationRepository cultivationRepository;
     private readonly IUserService userService;
     private readonly IMessenger messenger;
 
@@ -55,7 +56,7 @@ internal sealed partial class InventoryService : IInventoryService
         {
             case RefreshOptionKind.WebCalculator:
                 ArgumentNullException.ThrowIfNull(refreshOptions.MetadataContext);
-                return RefreshInventoryByCalculatorAsync(refreshOptions.MetadataContext, refreshOptions.Project);
+                return RefreshInventoryByCalculatorAsync(refreshOptions);
             case RefreshOptionKind.EmbeddedYae:
                 ArgumentNullException.ThrowIfNull(refreshOptions.YaeService);
                 ArgumentNullException.ThrowIfNull(refreshOptions.ViewModelSupportLaunchExecution);
@@ -71,8 +72,12 @@ internal sealed partial class InventoryService : IInventoryService
         inventoryRepository.RemoveInventoryItemRangeByProjectId(projectId);
     }
 
-    private async ValueTask RefreshInventoryByCalculatorAsync(ICultivationMetadataContext context, CultivateProject project)
+    private async ValueTask RefreshInventoryByCalculatorAsync(RefreshOptions options)
     {
+        ICultivationMetadataContext context = options.MetadataContext!;
+        CultivateProject project = options.Project;
+        bool syncToAllProjects = options.SyncCalculatorInventoryToAllProjects;
+
         if (await userService.GetCurrentUserAndUidAsync().ConfigureAwait(false) is not { } userAndUid)
         {
             messenger.Send(InfoBarMessage.Warning(SH.MustSelectUserAndUid));
@@ -98,8 +103,36 @@ internal sealed partial class InventoryService : IInventoryService
 
         if (batchConsumption is { OverallConsume: { IsDefault: false } items })
         {
-            inventoryRepository.RemoveInventoryItemRangeByProjectId(project.InnerId);
-            inventoryRepository.AddInventoryItemRangeByProjectId(items.SelectAsArray(static (item, project) => InventoryItem.From(project.InnerId, item.Id, (uint)((int)item.Num - item.LackNum)), project));
+            static IEnumerable<InventoryItem> ToInventoryItems(ImmutableArray<Item> consumeItems, Guid projectId)
+            {
+                static uint ToSafeCount(Item item)
+                {
+                    long delta = (long)item.Num - item.LackNum;
+                    if (delta <= 0)
+                    {
+                        return 0U;
+                    }
+
+                    return delta >= uint.MaxValue ? uint.MaxValue : (uint)delta;
+                }
+
+                return consumeItems.SelectAsArray(static (item, pid) => InventoryItem.From(pid, item.Id, ToSafeCount(item)), projectId);
+            }
+
+            if (syncToAllProjects)
+            {
+                ImmutableArray<Guid> projectIds = cultivationRepository.GetCultivateProjectInnerIds();
+                foreach (Guid projectId in projectIds.AsSpan())
+                {
+                    inventoryRepository.RemoveInventoryItemRangeByProjectId(projectId);
+                    inventoryRepository.AddInventoryItemRangeByProjectId(ToInventoryItems(items, projectId));
+                }
+            }
+            else
+            {
+                inventoryRepository.RemoveInventoryItemRangeByProjectId(project.InnerId);
+                inventoryRepository.AddInventoryItemRangeByProjectId(ToInventoryItems(items, project.InnerId));
+            }
         }
     }
 
