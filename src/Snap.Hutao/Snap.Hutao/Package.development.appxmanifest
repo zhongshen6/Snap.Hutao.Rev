@@ -13,7 +13,7 @@
   <Identity
     Name="60568DGPStudio.SnapHutaoDev"
     Publisher="CN=wangdage12"
-    Version="1.18.6.12" />
+    Version="1.18.6.13" />
 
   <Properties>
     <DisplayName>Snap Hutao Dev</DisplayName>

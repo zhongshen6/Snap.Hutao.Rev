@@ -4,7 +4,7 @@
   "data": [
     {
       "Id": 9178004,
-      "Title": "1.18.6.12 已发布",
+      "Title": "1.18.6.13 已发布",
       "Content": "适配注入相关改动以兼容月之六版本；优化元数据仓库同步流程，新增镜像预探测，减少因失效节点导致的卡顿；增强启动参数选项，支持跟随 Windows 主显示器并可自动读取当前分辨率。",
       "Link": "https://github.com/zhongshen6/Snap.Hutao.Rev/releases",
       "LastUpdateTime": 1775577600,
