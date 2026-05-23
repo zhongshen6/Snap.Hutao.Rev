@@ -55,13 +55,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $msi = Get-ChildItem `
-            -Path "src/Snap.Hutao/Snap.Hutao.Installer/bin/x64/Release/en-US" `
-            -Filter "*.msi" `
-            | Select-Object -First 1
+          $installerOutput = "src/Snap.Hutao/Snap.Hutao.Installer/bin/x64/Release"
+          $assets = @()
 
-          if ($null -eq $msi) {
-            throw "MSI artifact was not found."
+          foreach ($culture in @("en-US", "zh-CN")) {
+            $msi = Get-ChildItem `
+              -Path (Join-Path $installerOutput $culture) `
+              -Filter "*.msi" `
+              | Select-Object -First 1
+
+            if ($null -eq $msi) {
+              throw "MSI artifact was not found for $culture."
+            }
+
+            $asset = Join-Path $env:RUNNER_TEMP "Snap.Hutao.Installer.$culture.msi"
+            Copy-Item -LiteralPath $msi.FullName -Destination $asset -Force
+            $assets += $asset
           }
 
-          gh release upload "${{ steps.release.outputs.tag }}" $msi.FullName --repo "${{ github.repository }}" --clobber
+          gh release upload "${{ steps.release.outputs.tag }}" $assets --repo "${{ github.repository }}" --clobber
