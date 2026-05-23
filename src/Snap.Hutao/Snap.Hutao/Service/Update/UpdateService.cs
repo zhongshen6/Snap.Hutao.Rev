@@ -178,6 +178,7 @@ internal sealed partial class UpdateService : IUpdateService
 
         using HttpRequestMessage request = new(HttpMethod.Get, LatestReleaseApiEndpoint);
         request.Headers.Accept.ParseAdd("application/vnd.github+json");
+        request.Headers.UserAgent.ParseAdd("Snap.Hutao.Rev");
 
         using HttpResponseMessage response = await httpClient.SendAsync(request, source.Token).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
