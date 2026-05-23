@@ -297,6 +297,7 @@ internal sealed partial class CultivationService : ICultivationService
         }
 
         ArgumentNullException.ThrowIfNull(projects.CurrentItem);
+        Guid projectId = projects.CurrentItem.InnerId;
 
         await taskContext.SwitchToBackgroundAsync();
 
@@ -310,7 +311,7 @@ internal sealed partial class CultivationService : ICultivationService
         if (inputConsumption.Strategy is not ConsumptionSaveStrategyKind.CreateNewEntry)
         {
             // Check for existing entries
-            ImmutableArray<CultivateEntry> entries = cultivationRepository.GetCultivateEntryImmutableArrayByProjectIdAndItemId(projects.CurrentItem.InnerId, inputConsumption.ItemId);
+            ImmutableArray<CultivateEntry> entries = cultivationRepository.GetCultivateEntryImmutableArrayByProjectIdAndItemId(projectId, inputConsumption.ItemId);
 
             if (entries.Length > 0)
             {
@@ -330,6 +331,7 @@ internal sealed partial class CultivationService : ICultivationService
 
                     if (inputConsumption.Items is [])
                     {
+                        entryCollectionCache.TryRemove(projectId, out _);
                         return new(ConsumptionSaveResultKind.Removed);
                     }
                 }
@@ -344,7 +346,7 @@ internal sealed partial class CultivationService : ICultivationService
         }
 
         {
-            CultivateEntry entry = CultivateEntry.From(projects.CurrentItem.InnerId, inputConsumption.Type, inputConsumption.ItemId);
+            CultivateEntry entry = CultivateEntry.From(projectId, inputConsumption.Type, inputConsumption.ItemId);
             entry.RelatedEntryId = inputConsumption.RelatedEntryId;
             cultivationRepository.AddCultivateEntry(entry);
 
@@ -356,7 +358,7 @@ internal sealed partial class CultivationService : ICultivationService
 
             // The consumption save operation is always performed outside cultivation page
             // and without touching the cache. So we have to invalidate the cache manually.
-            entryCollectionCache.TryRemove(projects.CurrentItem.InnerId, out _);
+            entryCollectionCache.TryRemove(projectId, out _);
 
             return new(ConsumptionSaveResultKind.Added, entry.InnerId);
         }

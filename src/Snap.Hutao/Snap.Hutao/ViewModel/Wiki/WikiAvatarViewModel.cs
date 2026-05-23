@@ -20,6 +20,7 @@ using Snap.Hutao.Service.Notification;
 using Snap.Hutao.UI.Xaml.Control.AutoSuggestBox;
 using Snap.Hutao.UI.Xaml.Data;
 using Snap.Hutao.UI.Xaml.View.Dialog;
+using Snap.Hutao.ViewModel.Cultivation;
 using System.Collections.Immutable;
 using CalculateBatchConsumption = Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate.BatchConsumption;
 
@@ -155,7 +156,8 @@ internal sealed partial class WikiAvatarViewModel : Abstraction.ViewModel
                 Strategy = deltaOptions.Strategy,
             };
 
-            InfoBarMessage? message = (await cultivationService.SaveConsumptionAsync(input).ConfigureAwait(false)).Kind switch
+            ConsumptionSaveResult result = await cultivationService.SaveConsumptionAsync(input).ConfigureAwait(false);
+            InfoBarMessage? message = result.Kind switch
             {
                 ConsumptionSaveResultKind.NoProject => InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning),
                 ConsumptionSaveResultKind.Skipped => InfoBarMessage.Information(SH.ViewModelCultivationConsumptionSaveSkippedHint),
@@ -167,6 +169,11 @@ internal sealed partial class WikiAvatarViewModel : Abstraction.ViewModel
             if (message is not null)
             {
                 messenger.Send(message);
+            }
+
+            if (result.Kind is not ConsumptionSaveResultKind.NoProject)
+            {
+                messenger.Send(CultivationProjectEntriesChangedMessage.Empty);
             }
         }
         catch (HutaoException ex)

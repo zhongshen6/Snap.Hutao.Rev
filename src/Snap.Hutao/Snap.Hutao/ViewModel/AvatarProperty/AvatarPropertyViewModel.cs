@@ -230,7 +230,10 @@ internal sealed partial class AvatarPropertyViewModel : Abstraction.ViewModel, I
         if (!await SaveCultivationAsync(batchConsumption.Items.Single(), deltaOptions).ConfigureAwait(false))
         {
             scopeContext.Messenger.Send(InfoBarMessage.Warning(SH.ViewModelCultivationEntryAddWarning));
+            return;
         }
+
+        scopeContext.Messenger.Send(CultivationProjectEntriesChangedMessage.Empty);
     }
 
     [Command("BatchCultivateCommand")]
