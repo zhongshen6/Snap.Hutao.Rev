@@ -7,5 +7,5 @@ namespace Snap.Hutao.Service.Git;
 
 internal interface IGitRepositoryService
 {
-    ValueTask<ValueResult<bool, ValueDirectory>> EnsureRepositoryAsync(string name);
+    ValueTask<ValueResult<bool, ValueDirectory>> EnsureRepositoryAsync(string name, Action? reportProgress = default);
 }

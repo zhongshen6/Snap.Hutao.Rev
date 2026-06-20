@@ -17,7 +17,7 @@ namespace Snap.Hutao.Service.Metadata;
 [HttpClient(HttpClientConfiguration.Default)]
 internal sealed partial class MetadataService : IMetadataService
 {
-    private static readonly TimeSpan InitializationHardTimeout = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan InitializationProgressStallTimeout = TimeSpan.FromSeconds(15);
     private readonly TaskCompletionSource initializeCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private readonly IGitRepositoryService gitRepositoryService;
@@ -49,8 +49,21 @@ internal sealed partial class MetadataService : IMetadataService
         {
             try
             {
-                Task<ValueResult<bool, ValueDirectory>> ensureTask = gitRepositoryService.EnsureRepositoryAsync("Snap.Metadata").AsTask();
-                Task completedTask = await Task.WhenAny(ensureTask, Task.Delay(InitializationHardTimeout, token)).ConfigureAwait(false);
+                long lastProgressTick = Environment.TickCount64;
+                int progressStarted = 0;
+                void ReportProgress()
+                {
+                    Volatile.Write(ref lastProgressTick, Environment.TickCount64);
+                    Volatile.Write(ref progressStarted, 1);
+                }
+
+                using CancellationTokenSource progressStallTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+                Task<ValueResult<bool, ValueDirectory>> ensureTask = gitRepositoryService.EnsureRepositoryAsync("Snap.Metadata", ReportProgress).AsTask();
+                Task progressStallTask = WaitForProgressStallAsync(
+                    () => Volatile.Read(ref progressStarted) != 0,
+                    () => Volatile.Read(ref lastProgressTick),
+                    progressStallTokenSource.Token);
+                Task completedTask = await Task.WhenAny(ensureTask, progressStallTask).ConfigureAwait(false);
 
                 if (completedTask != ensureTask)
                 {
@@ -62,11 +75,13 @@ internal sealed partial class MetadataService : IMetadataService
                     }
 
                     isInitialized = false;
-                    logger.LogError("[Metadata] Initialization timed out after {TimeoutSeconds}s", InitializationHardTimeout.TotalSeconds);
+                    logger.LogError("[Metadata] Initialization failed after {TimeoutSeconds}s without repository progress", InitializationProgressStallTimeout.TotalSeconds);
                     _ = ObserveEnsureRepositoryTaskAsync(ensureTask);
                     return;
                 }
 
+                progressStallTokenSource.Cancel();
+                await ObserveCanceledProgressStallTaskAsync(progressStallTask).ConfigureAwait(false);
                 (isInitialized, _) = await ensureTask.ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -86,6 +101,23 @@ internal sealed partial class MetadataService : IMetadataService
         }
     }
 
+    private async Task WaitForProgressStallAsync(Func<bool> hasStarted, Func<long> getLastProgressTick, CancellationToken token)
+    {
+        while (true)
+        {
+            await Task.Delay(500, token).ConfigureAwait(false);
+            if (!hasStarted())
+            {
+                continue;
+            }
+
+            if (Environment.TickCount64 - getLastProgressTick() >= InitializationProgressStallTimeout.TotalMilliseconds)
+            {
+                return;
+            }
+        }
+    }
+
     private async Task ObserveEnsureRepositoryTaskAsync(Task<ValueResult<bool, ValueDirectory>> ensureTask)
     {
         try
@@ -95,6 +127,17 @@ internal sealed partial class MetadataService : IMetadataService
         catch (Exception ex)
         {
             logger.LogWarning(ex, "[Metadata] Timed out initialization task completed with an exception later");
+        }
+    }
+
+    private async Task ObserveCanceledProgressStallTaskAsync(Task progressStallTask)
+    {
+        try
+        {
+            await progressStallTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
         }
     }
 
