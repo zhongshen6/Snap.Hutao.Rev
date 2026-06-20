@@ -2982,6 +2982,12 @@
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryHeader" xml:space="preserve">
     <value>重定向合成</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>输入方式自动切换</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandHideUidHeader" xml:space="preserve">
+    <value>隐藏 UID</value>
+  </data>
   <data name="ViewPageLaunchGameIslandResinListItemAllowCondensedResinHeader" xml:space="preserve">
     <value>使用浓缩树脂领取奖励</value>
   </data>

@@ -18,6 +18,15 @@ internal sealed class GameIslandInterop : IGameIslandInterop
 {
     private const string IslandEnvironmentName = "4F3E8543-40F7-4808-82DC-21E48A6037A7";
     internal const string IslandLibraryName = "nvd3dump.dll";
+    private const uint InputSwitchEnabledFlag = 1U;
+    private const uint InputSwitchSettingPageCtor = 0x0D7BF170;
+    private const uint InputSwitchPageManagerOpen = 0x11CB09C0;
+    private const uint InputSwitchGIGIILOCMMA = 0x0D790340;
+    private const uint InputSwitchRuntimeObjectAllocHelper = 0x004C1530;
+    private const uint InputSwitchGlobalRoot = 0x04F16140;
+    private const uint InputSwitchSettingPageAllocHandle = 0x04F52D78;
+    private const uint InputSwitchRootManagerOffset = 0x9C70;
+    private const uint InputSwitchCurrentUiModeOffset = 0x364;
 
     private static ReadOnlySpan<uint> EnvironmentReservedSignature
     {
@@ -152,6 +161,15 @@ internal sealed class GameIslandInterop : IGameIslandInterop
         pIslandEnvironment->FieldOfView = options.TargetFov.Value;
         pIslandEnvironment->TargetFrameRate = (uint)Math.Max(options.TargetFps.Value, 0);
         pIslandEnvironment->Flags = BuildFlags(options, usingTouchScreen);
+        pIslandEnvironment->InputSwitchFlags = options.GamepadHotSwitchEnabled.Value ? InputSwitchEnabledFlag : 0U;
+        pIslandEnvironment->InputSwitchSettingPageCtor = InputSwitchSettingPageCtor;
+        pIslandEnvironment->InputSwitchPageManagerOpen = InputSwitchPageManagerOpen;
+        pIslandEnvironment->InputSwitchGIGIILOCMMA = InputSwitchGIGIILOCMMA;
+        pIslandEnvironment->InputSwitchRuntimeObjectAllocHelper = InputSwitchRuntimeObjectAllocHelper;
+        pIslandEnvironment->InputSwitchGlobalRoot = InputSwitchGlobalRoot;
+        pIslandEnvironment->InputSwitchSettingPageAllocHandle = InputSwitchSettingPageAllocHandle;
+        pIslandEnvironment->InputSwitchRootManagerOffset = InputSwitchRootManagerOffset;
+        pIslandEnvironment->InputSwitchCurrentUiModeOffset = InputSwitchCurrentUiModeOffset;
     }
 
     private static uint BuildFlags(LaunchOptions options, bool usingTouchScreen)
@@ -191,9 +209,9 @@ internal sealed class GameIslandInterop : IGameIslandInterop
 
     private static unsafe void ValidateEnvironmentLayout()
     {
-        if (sizeof(IslandEnvironment) != 88)
+        if (sizeof(IslandEnvironment) != 124)
         {
-            throw HutaoException.InvalidOperation($"IslandEnvironment layout mismatch, expected 88 but got {sizeof(IslandEnvironment)}");
+            throw HutaoException.InvalidOperation($"IslandEnvironment layout mismatch, expected 124 but got {sizeof(IslandEnvironment)}");
         }
     }
 
