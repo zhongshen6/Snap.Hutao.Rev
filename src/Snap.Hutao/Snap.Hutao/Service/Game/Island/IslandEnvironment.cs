@@ -16,12 +16,8 @@ internal unsafe struct IslandEnvironment
     public uint TargetFrameRate;
     public uint Flags;
     public uint InputSwitchFlags;
-    public uint InputSwitchSettingPageCtor;
+    public uint InputSwitchSettingsActionBridge;
     public uint InputSwitchPageManagerOpen;
     public uint InputSwitchGIGIILOCMMA;
-    public uint InputSwitchRuntimeObjectAllocHelper;
-    public uint InputSwitchGlobalRoot;
-    public uint InputSwitchSettingPageAllocHandle;
-    public uint InputSwitchRootManagerOffset;
     public uint InputSwitchCurrentUiModeOffset;
 }
