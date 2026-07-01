@@ -843,15 +843,48 @@
                                         OnContent="{shuxm:ResourceString Name=ViewPageLaunchGameDisableFogOn}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
-                                        Grid.Row="3"
-                                        Grid.Column="1"
-                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchHeader}"
+                                        x:Name="GamepadHotSwitchToggleSwitch"
+                                        Grid.Row="6"
+                                        Grid.Column="0"
                                         IsOn="{Binding LaunchOptions.GamepadHotSwitchEnabled.Value, Mode=TwoWay}"
-                                        ToolTipService.ToolTip=""/>
+                                        ToolTipService.ToolTip="">
+                                        <mxi:Interaction.Behaviors>
+                                            <shuxb:ToggleSwitchHeaderHitTestVisibleBehavior/>
+                                        </mxi:Interaction.Behaviors>
+                                        <ToggleSwitch.Header>
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchHeader}"/>
+                                                <Button
+                                                    Padding="1,1,0.5,0.5"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center">
+                                                    <mxi:Interaction.Behaviors>
+                                                        <mxi:EventTriggerBehavior EventName="Click">
+                                                            <mxi:EventTriggerBehavior.Actions>
+                                                                <shuxba:ShowTeachingTipAction TeachingTip="{x:Bind GamepadHotSwitchTeachingTip}"/>
+                                                            </mxi:EventTriggerBehavior.Actions>
+                                                        </mxi:EventTriggerBehavior>
+                                                    </mxi:Interaction.Behaviors>
+                                                    <FontIcon
+                                                        FontSize="12"
+                                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                                        Glyph="&#xE946;"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </ToggleSwitch.Header>
+                                    </ToggleSwitch>
+                                    <TeachingTip
+                                        x:Name="GamepadHotSwitchTeachingTip"
+                                        Title="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchHeader}"
+                                        Grid.Row="6"
+                                        Grid.Column="0"
+                                        IsLightDismissEnabled="True"
+                                        Subtitle="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchDescription}"
+                                        Target="{x:Bind GamepadHotSwitchToggleSwitch}"/>
                                     <ToggleSwitch
                                         x:Name="RedirectCombineEntryToggleSwitch"
-                                        Grid.Row="4"
-                                        Grid.Column="0"
+                                        Grid.Row="3"
+                                        Grid.Column="1"
                                         IsOn="{Binding LaunchOptions.RedirectCombineEntry.Value, Mode=TwoWay}"
                                         Style="{ThemeResource DefaultToggleSwitchStyle}"
                                         ToolTipService.ToolTip="">
@@ -883,8 +916,8 @@
                                     <TeachingTip
                                         x:Name="RedirectCombineEntryTeachingTip"
                                         Title="{shuxm:ResourceString Name=ViewPageLaunchGameIslandRedirectCombineEntryHeader}"
-                                        Grid.Row="4"
-                                        Grid.Column="0"
+                                        Grid.Row="3"
+                                        Grid.Column="1"
                                         IsLightDismissEnabled="True"
                                         Subtitle="{shuxm:ResourceString Name=ViewPageLaunchGameIslandRedirectCombineEntryDescription}"
                                         Target="{x:Bind RedirectCombineEntryToggleSwitch}">
@@ -901,38 +934,38 @@
 
                                     <ToggleSwitch
                                         Grid.Row="4"
-                                        Grid.Column="1"
+                                        Grid.Column="0"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowOriginalResinHeader}"
                                         IsOn="{Binding LaunchOptions.ResinListItemId000106Allowed.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
                                         Grid.Row="4"
-                                        Grid.Column="2"
+                                        Grid.Column="1"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowPrimogemHeader}"
                                         IsOn="{Binding LaunchOptions.ResinListItemId000201Allowed.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
-                                        Grid.Row="5"
-                                        Grid.Column="0"
+                                        Grid.Row="4"
+                                        Grid.Column="2"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowFragileResinHeader}"
                                         IsOn="{Binding LaunchOptions.ResinListItemId107009Allowed.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
 
                                     <ToggleSwitch
                                         Grid.Row="5"
-                                        Grid.Column="1"
+                                        Grid.Column="0"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowTransientResinHeader}"
                                         IsOn="{Binding LaunchOptions.ResinListItemId107012Allowed.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
                                         Grid.Row="5"
-                                        Grid.Column="2"
+                                        Grid.Column="1"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowCondensedResinHeader}"
                                         IsOn="{Binding LaunchOptions.ResinListItemId220007Allowed.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
-                                        Grid.Row="6"
-                                        Grid.Column="0"
+                                        Grid.Row="5"
+                                        Grid.Column="2"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandHideUidHeader}"
                                         IsOn="{Binding LaunchOptions.HideUid.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>

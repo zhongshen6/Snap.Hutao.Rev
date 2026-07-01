@@ -2891,6 +2891,13 @@ Kullanılabilir Alan: {2}</value>
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Enjeksiyon Seçenekleri</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Otomatik giriş yöntemi geçişi</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Oyun kumandası ve klavye kontrolleri arasında hızlı geçiş sağlar. İki giriş yöntemi arasında geçiş yapmak için farenin sol düğmesini veya oyun kumandasındaki A düğmesini kullanın.
+Bu özellik, resmi yerel destek duyurulmadan önce bağımsız olarak tamamlandı. Resmi çözüm enjeksiyon tabanlı uygulamanın yerini alacağından, bu özellik yalnızca araştırma ve uygulama kaydı olarak korunmaktadır. Lütfen resmi hızlı geçiş özelliğini tercih edin.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>Eşya detaylarında sentezlenebilir miktara tıklandığında harita yerine doğrudan sentez sayfasını aç</value>
   </data>

@@ -2891,6 +2891,13 @@ Ruang Tersedia: {2}</value>
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Opsi Suntikan</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Peralihan metode input otomatis</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Untuk beralih cepat antara kontrol gamepad dan keyboard. Gunakan tombol kiri mouse atau tombol A pada gamepad untuk beralih di antara kedua metode input.
+Fitur ini diselesaikan secara independen sebelum dukungan native resmi diumumkan. Karena solusi resmi akan menggantikan implementasi berbasis injeksi, fitur ini hanya dipertahankan sebagai catatan penelitian dan implementasi. Utamakan fitur hot-switch resmi.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>Klik jumlah yang dapat disintesis di detail item untuk langsung membuka halaman sintesis alih-alih peta</value>
   </data>

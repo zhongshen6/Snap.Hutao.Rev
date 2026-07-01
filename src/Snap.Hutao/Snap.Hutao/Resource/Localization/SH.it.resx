@@ -2891,6 +2891,13 @@ Spazio disponibile: {2}</value>
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Opzioni di iniezione</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Cambio automatico del metodo di input</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Consente di passare rapidamente tra controller e tastiera. Usa il pulsante sinistro del mouse o il pulsante A del controller per alternare i due metodi di input.
+Questa funzione è stata completata in modo indipendente prima dell'annuncio del supporto nativo ufficiale. Poiché la soluzione ufficiale sostituirà l'implementazione basata sull'iniezione, la funzione viene mantenuta solo come documentazione della ricerca e dell'implementazione. Usa preferibilmente la funzione ufficiale di cambio rapido.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>Clicca sulla quantità combinabile nei dettagli dell'oggetto per aprire direttamente la pagina di combinazione invece della mappa</value>
   </data>

@@ -2894,6 +2894,13 @@
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>注入選項</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>輸入方式自動切換</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>用於手把和鍵盤操作的快速切換，透過滑鼠左鍵和手把 A 鍵快速切換兩種輸入方式。
+本功能在官方宣布原生支援前獨立完成。由於官方方案將取代注入實作，本功能僅保留為研究與實作記錄，請優先使用官方熱切換功能。</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>在物品詳情中點擊可合成數量時直接打開合成頁面而不是地圖</value>
   </data>

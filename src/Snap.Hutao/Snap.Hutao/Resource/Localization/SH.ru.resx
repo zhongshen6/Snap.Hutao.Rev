@@ -2895,6 +2895,13 @@
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Опции внедрения</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Автоматическое переключение способа ввода</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Позволяет быстро переключаться между геймпадом и клавиатурой. Используйте левую кнопку мыши или кнопку A на геймпаде для переключения между двумя способами ввода.
+Эта функция была независимо реализована до объявления официальной встроенной поддержки. Поскольку официальное решение заменит реализацию на основе инъекции, функция сохранена только как запись исследования и реализации. Рекомендуется использовать официальную функцию быстрого переключения.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>При нажатии на количество для крафта в деталях предмета открывается страница крафта вместо карты</value>
   </data>

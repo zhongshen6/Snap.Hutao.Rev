@@ -2921,6 +2921,13 @@ Space Available: {2}</value>
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Injection Options</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Automatic Input Switching</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Quickly switch between controller and keyboard controls. Use the left mouse button or the controller's A button to switch between the two input methods.
+This feature was independently completed before official native support was announced. Since the official solution will replace the injection-based implementation, this feature is retained only as a record of research and implementation. Please prefer the official hot-switching feature.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>Click the craftable quantity in the item details to open the crafting page directly instead of the map</value>
   </data>

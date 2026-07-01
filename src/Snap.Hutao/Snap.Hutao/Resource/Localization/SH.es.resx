@@ -2891,6 +2891,13 @@ Espacio disponible: {2}</value>
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Opciones de Inyección</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Cambio automático de método de entrada</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Permite cambiar rápidamente entre el mando y el teclado. Usa el botón izquierdo del ratón o el botón A del mando para alternar entre ambos métodos de entrada.
+Esta función se completó de forma independiente antes de que se anunciara la compatibilidad nativa oficial. Dado que la solución oficial sustituirá la implementación mediante inyección, esta función se conserva únicamente como registro de investigación e implementación. Usa preferentemente la función oficial de cambio rápido.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>Al hacer clic en la cantidad combinable en los detalles del artículo, se abre directamente la página de combinación en lugar del mapa</value>
   </data>

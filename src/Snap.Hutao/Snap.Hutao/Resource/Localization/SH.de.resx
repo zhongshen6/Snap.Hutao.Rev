@@ -2891,6 +2891,13 @@ Verfügbarer Speicherplatz: {2}</value>
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Injektionsoptionen</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Automatischer Eingabemoduswechsel</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Zum schnellen Wechsel zwischen Controller- und Tastatursteuerung. Wechseln Sie mit der linken Maustaste oder der A-Taste des Controllers zwischen den beiden Eingabemethoden.
+Diese Funktion wurde unabhängig entwickelt, bevor die offizielle native Unterstützung angekündigt wurde. Da die offizielle Lösung die injektionsbasierte Implementierung ersetzen wird, bleibt diese Funktion nur als Dokumentation der Forschung und Umsetzung erhalten. Bitte verwenden Sie bevorzugt die offizielle Hot-Switch-Funktion.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>Klicken Sie auf die Anzahl der herstellbaren Gegenstände in den Artikeldetails, um direkt zur Herstellungsseite anstatt zur Karte zu gelangen</value>
   </data>

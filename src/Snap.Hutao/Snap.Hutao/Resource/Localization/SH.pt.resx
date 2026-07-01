@@ -2891,6 +2891,13 @@ Espaço disponível: {2}</value>
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Opções de Injeção</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Alternância automática do método de entrada</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Permite alternar rapidamente entre o controle e o teclado. Use o botão esquerdo do mouse ou o botão A do controle para alternar entre os dois métodos de entrada.
+Este recurso foi concluído de forma independente antes do anúncio do suporte nativo oficial. Como a solução oficial substituirá a implementação por injeção, este recurso será mantido apenas como registro de pesquisa e implementação. Dê preferência ao recurso oficial de alternância rápida.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>Ao clicar na quantidade sintetizável nos detalhes do item, abra diretamente a página de síntese em vez do mapa</value>
   </data>

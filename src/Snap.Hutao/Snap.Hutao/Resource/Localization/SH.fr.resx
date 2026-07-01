@@ -2891,6 +2891,13 @@ Espace disponible : {2}</value>
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Options d'injection</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Basculement automatique du mode de saisie</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Permet de basculer rapidement entre la manette et le clavier. Utilisez le bouton gauche de la souris ou le bouton A de la manette pour passer d'un mode de saisie à l'autre.
+Cette fonctionnalité a été développée indépendamment avant l'annonce de la prise en charge native officielle. La solution officielle devant remplacer l'implémentation par injection, cette fonctionnalité est uniquement conservée comme trace de recherche et d'implémentation. Veuillez privilégier la fonction officielle de basculement à chaud.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>Cliquer sur la quantité synthétisable dans les détails de l'objet ouvre directement la page de synthèse au lieu de la carte</value>
   </data>

@@ -2891,6 +2891,13 @@
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>ตัวเลือกการฉีด</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>การสลับวิธีป้อนข้อมูลอัตโนมัติ</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>ใช้สำหรับสลับการควบคุมระหว่างจอยเกมและแป้นพิมพ์อย่างรวดเร็ว โดยใช้ปุ่มซ้ายของเมาส์หรือปุ่ม A บนจอยเกมเพื่อสลับระหว่างวิธีป้อนข้อมูลทั้งสองแบบ
+ฟีเจอร์นี้พัฒนาขึ้นอย่างอิสระก่อนมีการประกาศรองรับแบบเนทีฟอย่างเป็นทางการ เนื่องจากแนวทางอย่างเป็นทางการจะมาแทนที่การทำงานแบบฉีดโค้ด ฟีเจอร์นี้จึงคงไว้เป็นบันทึกการวิจัยและการพัฒนาเท่านั้น โปรดเลือกใช้ฟีเจอร์สลับแบบด่วนอย่างเป็นทางการก่อน</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>เมื่อคลิกที่จำนวนที่สามารถผสมได้ในรายละเอียดไอเท็ม จะเปิดหน้าผสมโดยตรงแทนที่จะเป็นแผนที่</value>
   </data>

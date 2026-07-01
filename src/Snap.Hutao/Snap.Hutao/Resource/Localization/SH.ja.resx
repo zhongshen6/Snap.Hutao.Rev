@@ -2893,6 +2893,13 @@
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>注入オプション</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>入力方式の自動切り替え</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>コントローラー操作とキーボード操作をすばやく切り替えます。マウスの左ボタンまたはコントローラーのAボタンで、2つの入力方式を切り替えられます。
+本機能は、公式のネイティブ対応が発表される前に独自に完成したものです。公式の方式がインジェクション実装を置き換えるため、本機能は研究および実装の記録としてのみ残されています。公式のホット切り替え機能を優先して使用してください。</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>アイテム詳細で「合成可能数」をクリックした時、マップではなく「合成台」を直接に開きます</value>
   </data>

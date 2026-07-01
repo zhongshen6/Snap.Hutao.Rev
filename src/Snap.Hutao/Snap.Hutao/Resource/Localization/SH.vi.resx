@@ -2891,6 +2891,13 @@ Dung lượng còn trống: {2}</value>
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>Tùy chọn tiêm</value>
   </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
+    <value>Tự động chuyển đổi phương thức nhập</value>
+  </data>
+  <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
+    <value>Dùng để chuyển nhanh giữa thao tác bằng tay cầm và bàn phím. Sử dụng nút chuột trái hoặc nút A trên tay cầm để chuyển đổi giữa hai phương thức nhập.
+Tính năng này được hoàn thiện độc lập trước khi hỗ trợ gốc chính thức được công bố. Vì giải pháp chính thức sẽ thay thế cách triển khai bằng chèn mã, tính năng này chỉ được giữ lại như một bản ghi nghiên cứu và triển khai. Hãy ưu tiên sử dụng tính năng chuyển đổi nhanh chính thức.</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>Nhấp vào số lượng có thể tổng hợp trong chi tiết vật phẩm để mở trực tiếp trang tổng hợp thay vì bản đồ</value>
   </data>
