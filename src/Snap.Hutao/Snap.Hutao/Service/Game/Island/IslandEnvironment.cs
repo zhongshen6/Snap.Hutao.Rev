@@ -20,4 +20,5 @@ internal unsafe struct IslandEnvironment
     public uint InputSwitchPageManagerOpen;
     public uint InputSwitchGIGIILOCMMA;
     public uint InputSwitchCurrentUiModeOffset;
+    public uint InputSwitchClosePageVtableSlot;
 }

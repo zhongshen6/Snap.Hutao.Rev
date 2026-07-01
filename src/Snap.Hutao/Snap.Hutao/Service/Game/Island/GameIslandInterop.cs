@@ -19,10 +19,14 @@ internal sealed class GameIslandInterop : IGameIslandInterop
     private const string IslandEnvironmentName = "4F3E8543-40F7-4808-82DC-21E48A6037A7";
     internal const string IslandLibraryName = "nvd3dump.dll";
     private const uint InputSwitchEnabledFlag = 1U;
-    private const uint InputSwitchSettingsActionBridge = 0x06A5A7E0;
-    private const uint InputSwitchPageManagerOpen = 0x11CB09C0;
-    private const uint InputSwitchGIGIILOCMMA = 0x0D790340;
-    private const uint InputSwitchCurrentUiModeOffset = 0x364;
+
+    // 纪念性保留：本功能完成后的次日，官方宣布后续版本原生支持键鼠与手柄热切换。
+    // 这条注入路线不再具有长期维护价值，仅用于旧版本兼容并记录这段研究工作。
+    private const uint InputSwitchSettingsActionBridge = 0x12079D10;
+    private const uint InputSwitchPageManagerOpen = 0x0AA1F340;
+    private const uint InputSwitchGIGIILOCMMA = 0x08CF2330;
+    private const uint InputSwitchCurrentUiModeOffset = 0x320;
+    private const uint InputSwitchClosePageVtableSlot = 75;
 
     private static ReadOnlySpan<uint> EnvironmentReservedSignature
     {
@@ -30,10 +34,10 @@ internal sealed class GameIslandInterop : IGameIslandInterop
         {
             return
             [
-                0x0160F2F0, 0x173BA6B0, 0x01106F10, 0x01106F00, 0x0D8765D0,
-                0x0654B930, 0x00449EB0, 0x0B60DEC0, 0x07A06BA0, 0x079B8680,
-                0x0E68B6D0, 0x0E6D4D90, 0x09D127D0, 0x0E93CCE0, 0x01100760,
-                0x010FFF20, 0x0795DD26, 0x11B07B80, 0x0D7ACCD0,
+                0x01661520, 0x17D036D0, 0x01138D60, 0x01138D50, 0x0DF1EE40,
+                0x066EE0D0, 0x0045CDA0, 0x12464640, 0x0B560070, 0x0B55EF60,
+                0x1275B9B0, 0x0FD74170, 0x105AAD50, 0x08BD0290, 0x01132490,
+                0x01131C50, 0x0C14AA06, 0x12424A60, 0x08D00130,
             ];
         }
     }
@@ -162,6 +166,7 @@ internal sealed class GameIslandInterop : IGameIslandInterop
         pIslandEnvironment->InputSwitchPageManagerOpen = InputSwitchPageManagerOpen;
         pIslandEnvironment->InputSwitchGIGIILOCMMA = InputSwitchGIGIILOCMMA;
         pIslandEnvironment->InputSwitchCurrentUiModeOffset = InputSwitchCurrentUiModeOffset;
+        pIslandEnvironment->InputSwitchClosePageVtableSlot = InputSwitchClosePageVtableSlot;
     }
 
     private static uint BuildFlags(LaunchOptions options, bool usingTouchScreen)
@@ -201,9 +206,9 @@ internal sealed class GameIslandInterop : IGameIslandInterop
 
     private static unsafe void ValidateEnvironmentLayout()
     {
-        if (sizeof(IslandEnvironment) != 108)
+        if (sizeof(IslandEnvironment) != 112)
         {
-            throw HutaoException.InvalidOperation($"IslandEnvironment layout mismatch, expected 108 but got {sizeof(IslandEnvironment)}");
+            throw HutaoException.InvalidOperation($"IslandEnvironment layout mismatch, expected 112 but got {sizeof(IslandEnvironment)}");
         }
     }
 

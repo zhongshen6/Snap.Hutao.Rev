@@ -32,3 +32,6 @@ output
 MinIsland
 YuanShen
 upstream-remastered/
+Hook.log
+IDAHook.log
+artifacts/
