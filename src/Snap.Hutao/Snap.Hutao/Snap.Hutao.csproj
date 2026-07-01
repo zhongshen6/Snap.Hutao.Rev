@@ -12,7 +12,7 @@
     <UseWinUI>true</UseWinUI>
     <UseWPF>False</UseWPF>
 	<!-- 配置版本号 -->
-	<Version>1.18.7.13</Version>
+	<Version>1.18.7.14</Version>
 	 
     <UseWindowsForms>False</UseWindowsForms>
     <ImplicitUsings>False</ImplicitUsings>
