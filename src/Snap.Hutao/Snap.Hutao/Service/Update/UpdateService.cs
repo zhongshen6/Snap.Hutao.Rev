@@ -8,17 +8,13 @@ using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.ContentDialog;
 using Snap.Hutao.Service.Notification;
 using Snap.Hutao.Web.Hutao;
-using System.IO;
 using System.Net.Http;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Snap.Hutao.Service.Update;
 
 [Service(ServiceLifetime.Singleton, typeof(IUpdateService))]
 internal sealed partial class UpdateService : IUpdateService
 {
-    private const string LatestReleaseApiEndpoint = "https://api.github.com/repos/zhongshen6/Snap.Hutao.Rev/releases/latest";
     private const string LatestReleasePage = "https://github.com/zhongshen6/Snap.Hutao.Rev/releases/latest";
 
     // Avoid injecting services directly
@@ -39,7 +35,7 @@ internal sealed partial class UpdateService : IUpdateService
                 ITaskContext taskContext = scope.ServiceProvider.GetRequiredService<ITaskContext>();
                 await taskContext.SwitchToBackgroundAsync();
 
-                GitHubLatestRelease? latestRelease = await GetLatestReleaseAsync(scope.ServiceProvider, token).ConfigureAwait(false);
+                GitHubLatestRelease? latestRelease = await GetLatestReleaseFromRedirectAsync(scope.ServiceProvider, token).ConfigureAwait(false);
                 if (latestRelease is null || !TryCreatePackageInformation(latestRelease, out HutaoPackageInformation packageInformation))
                 {
                     checkUpdateResult.Kind = CheckUpdateResultKind.VersionApiInvalidResponse;
@@ -169,36 +165,40 @@ internal sealed partial class UpdateService : IUpdateService
         return end > 0 && Version.TryParse(trimmed[..end], out version);
     }
 
-    private static async ValueTask<GitHubLatestRelease?> GetLatestReleaseAsync(IServiceProvider serviceProvider, CancellationToken token)
+    private static async ValueTask<GitHubLatestRelease?> GetLatestReleaseFromRedirectAsync(IServiceProvider serviceProvider, CancellationToken token)
     {
         IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
         using HttpClient httpClient = httpClientFactory.CreateClient();
         using CancellationTokenSource source = CancellationTokenSource.CreateLinkedTokenSource(token);
         source.CancelAfter(TimeSpan.FromSeconds(5));
 
-        using HttpRequestMessage request = new(HttpMethod.Get, LatestReleaseApiEndpoint);
-        request.Headers.Accept.ParseAdd("application/vnd.github+json");
+        using HttpRequestMessage request = new(HttpMethod.Get, LatestReleasePage);
         request.Headers.UserAgent.ParseAdd("Snap.Hutao.Rev");
 
-        using HttpResponseMessage response = await httpClient.SendAsync(request, source.Token).ConfigureAwait(false);
+        using HttpResponseMessage response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, source.Token).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
             return null;
         }
 
-        await using Stream stream = await response.Content.ReadAsStreamAsync(source.Token).ConfigureAwait(false);
-        return await JsonSerializer.DeserializeAsync<GitHubLatestRelease>(stream, cancellationToken: source.Token).ConfigureAwait(false);
+        string? releasePage = response.RequestMessage?.RequestUri?.AbsoluteUri;
+        string? tagName = response.RequestMessage?.RequestUri?.Segments.LastOrDefault()?.TrimEnd('/');
+        return string.IsNullOrWhiteSpace(releasePage) || string.IsNullOrWhiteSpace(tagName)
+            ? null
+            : new()
+            {
+                TagName = tagName,
+                Name = tagName,
+                HtmlUrl = releasePage,
+            };
     }
 
     private sealed class GitHubLatestRelease
     {
-        [JsonPropertyName("tag_name")]
         public string? TagName { get; set; }
 
-        [JsonPropertyName("name")]
         public string? Name { get; set; }
 
-        [JsonPropertyName("html_url")]
         public string? HtmlUrl { get; set; }
     }
 }
