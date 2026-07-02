@@ -7,6 +7,7 @@ using Snap.Hutao.Core.ExceptionService;
 using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Service.GachaLog.Factory;
 using Snap.Hutao.Service.GachaLog.QueryProvider;
+using Snap.Hutao.Service.Metadata;
 using Snap.Hutao.ViewModel.GachaLog;
 using Snap.Hutao.Web.Hoyolab.Hk4e.Event.GachaInfo;
 using Snap.Hutao.Web.Response;
@@ -23,6 +24,7 @@ internal sealed partial class GachaLogService : IGachaLogService
     private readonly IServiceProvider serviceProvider;
     private readonly ILogger<GachaLogService> logger;
     private readonly ITaskContext taskContext;
+    private readonly ExternalMetadataGuard externalMetadataGuard;
 
     private readonly AsyncLock archivesLock = new();
     private IAdvancedDbCollectionView<GachaArchive>? archives;
@@ -123,6 +125,7 @@ internal sealed partial class GachaLogService : IGachaLogService
     {
         IAdvancedDbCollectionView<GachaArchive> localArchives = await GetArchiveCollectionAsync().ConfigureAwait(false);
         GachaLogFetchContext fetchContext = new(gachaLogRepository, context, isLazy);
+        bool externalMetadataInvalid = false;
 
         using (IServiceScope scope = serviceProvider.CreateScope())
         {
@@ -147,6 +150,11 @@ internal sealed partial class GachaLogService : IGachaLogService
 
                     fetchContext.ResetCurrentPage();
                     ImmutableArray<GachaLogItem> items = page.List;
+                    if (!externalMetadataGuard.ValidateGachaLogPage(context, page))
+                    {
+                        externalMetadataInvalid = true;
+                        break;
+                    }
 
                     foreach (GachaLogItem item in items)
                     {
@@ -180,6 +188,11 @@ internal sealed partial class GachaLogService : IGachaLogService
                     break;
                 }
 
+                if (externalMetadataInvalid)
+                {
+                    break;
+                }
+
                 // Save items for each queryType
                 token.ThrowIfCancellationRequested();
                 fetchContext.SaveItems();
@@ -187,6 +200,11 @@ internal sealed partial class GachaLogService : IGachaLogService
                 // Delay between query types
                 await Task.Delay(Random.Shared.Next(1000, 2000), token).ConfigureAwait(false);
             }
+        }
+
+        if (externalMetadataInvalid)
+        {
+            return new(false, fetchContext.TargetArchive);
         }
 
         return new(!fetchContext.Status.AuthKeyTimeout, fetchContext.TargetArchive);

@@ -6,6 +6,8 @@ using Snap.Hutao.Core.DependencyInjection.Abstraction;
 using Snap.Hutao.Model.Entity.Database;
 using Snap.Hutao.Model.Metadata.Avatar;
 using Snap.Hutao.Model.Primitive;
+using Snap.Hutao.Service.AvatarInfo.Factory;
+using Snap.Hutao.Service.Metadata;
 using Snap.Hutao.ViewModel.User;
 using Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate;
 using Snap.Hutao.Web.Hoyolab.Takumi.GameRecord;
@@ -25,11 +27,12 @@ internal sealed partial class AvatarInfoRepositoryOperation
     private readonly IAvatarInfoRepository avatarInfoRepository;
     private readonly IServiceProvider serviceProvider;
     private readonly ITaskContext taskContext;
+    private readonly ExternalMetadataGuard externalMetadataGuard;
 
     [GeneratedConstructor]
     public partial AvatarInfoRepositoryOperation(IServiceProvider serviceProvider);
 
-    public async ValueTask<ImmutableArray<EntityAvatarInfo>> UpdateDbAvatarInfosAsync(UserAndUid userAndUid, CancellationToken token)
+    public async ValueTask<ImmutableArray<EntityAvatarInfo>> UpdateDbAvatarInfosAsync(SummaryFactoryMetadataContext context, UserAndUid userAndUid, CancellationToken token)
     {
         await taskContext.SwitchToBackgroundAsync();
         string uid = userAndUid.Uid.Value;
@@ -65,6 +68,11 @@ internal sealed partial class AvatarInfoRepositoryOperation
                 .ConfigureAwait(false);
 
             if (!ResponseValidator.TryValidate(detailResponse, serviceProvider, out ListWrapper<DetailedCharacter>? detailsWrapper))
+            {
+                return avatarInfoRepository.GetAvatarInfoImmutableArrayByUid(uid);
+            }
+
+            if (!externalMetadataGuard.ValidateAvatarDetails(context, detailsWrapper.List))
             {
                 return avatarInfoRepository.GetAvatarInfoImmutableArrayByUid(uid);
             }

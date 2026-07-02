@@ -7,6 +7,8 @@ using Snap.Hutao.Factory.ContentDialog;
 using Snap.Hutao.Factory.Picker;
 using Snap.Hutao.Model.InterChange.Achievement;
 using Snap.Hutao.Service.Achievement;
+using Snap.Hutao.Service.Metadata;
+using Snap.Hutao.Service.Metadata.ContextAbstraction;
 using Snap.Hutao.Service.Notification;
 using Snap.Hutao.UI.Xaml.View.Dialog;
 using Snap.Hutao.ViewModel.Game;
@@ -18,6 +20,7 @@ namespace Snap.Hutao.ViewModel.Achievement;
 internal sealed partial class AchievementImporter
 {
     private readonly AchievementImporterScopeContext scopeContext;
+    private readonly ExternalMetadataGuard externalMetadataGuard;
 
     [GeneratedConstructor]
     public partial AchievementImporter(IServiceProvider serviceProvider);
@@ -95,6 +98,19 @@ internal sealed partial class AchievementImporter
         if (!uiaf.IsCurrentVersionSupported())
         {
             scopeContext.Messenger.Send(InfoBarMessage.Warning(SH.ViewModelImportWarningTitle, SH.ViewModelAchievementImportWarningMessage));
+            return false;
+        }
+
+        if (!await context.MetadataService.InitializeAsync().ConfigureAwait(false))
+        {
+            return false;
+        }
+
+        AchievementServiceMetadataContext metadataContext = await context.MetadataService
+            .GetContextAsync<AchievementServiceMetadataContext>()
+            .ConfigureAwait(false);
+        if (!externalMetadataGuard.ValidateUIAF(metadataContext, uiaf))
+        {
             return false;
         }
 

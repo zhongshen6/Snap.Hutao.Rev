@@ -4,6 +4,8 @@ using Snap.Hutao.Core.ExceptionService;
 using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Model.InterChange.GachaLog;
 using Snap.Hutao.Service.GachaLog;
+using Snap.Hutao.Service.Metadata;
+using Snap.Hutao.Service.Metadata.ContextAbstraction;
 using Snap.Hutao.ViewModel.GachaLog;
 using Snap.Hutao.Web.Hoyolab.Hk4e.Event.GachaInfo;
 using System.Collections.Immutable;
@@ -15,6 +17,8 @@ internal abstract partial class AbstractUIGF40ImportService : IUIGFImportService
     private readonly IServiceProvider serviceProvider;
     private readonly ITaskContext taskContext;
     private readonly IMessenger messenger;
+    private readonly IMetadataService metadataService;
+    private readonly ExternalMetadataGuard externalMetadataGuard;
 
     [GeneratedConstructor]
     public partial AbstractUIGF40ImportService(IServiceProvider serviceProvider);
@@ -22,6 +26,17 @@ internal abstract partial class AbstractUIGF40ImportService : IUIGFImportService
     public async ValueTask ImportAsync(UIGFImportOptions importOptions, CancellationToken token = default)
     {
         await taskContext.SwitchToBackgroundAsync();
+        if (!await metadataService.InitializeAsync().ConfigureAwait(false))
+        {
+            return;
+        }
+
+        GachaLogServiceMetadataContext context = await metadataService.GetContextAsync<GachaLogServiceMetadataContext>(token).ConfigureAwait(false);
+        if (!externalMetadataGuard.ValidateUIGF(context, importOptions.UIGF.Hk4e, importOptions.GachaArchiveUids))
+        {
+            return;
+        }
+
         ImportGachaArchives(importOptions.UIGF.Hk4e, importOptions.GachaArchiveUids);
         messenger.Send(GachaLogImportedMessage.Empty);
     }

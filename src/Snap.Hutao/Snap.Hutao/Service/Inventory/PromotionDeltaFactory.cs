@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Snap.Hutao.Core.Diagnostics;
 using Snap.Hutao.Model.Metadata.Abstraction;
 using Snap.Hutao.Service.Cultivation;
+using Snap.Hutao.Service.Metadata;
 using Snap.Hutao.ViewModel.User;
 using Snap.Hutao.Web.Hoyolab.Takumi.Event.Calculate;
 using System.Collections.Immutable;
@@ -21,13 +22,15 @@ internal sealed partial class PromotionDeltaFactory
     private readonly ILogger<PromotionDeltaFactory> logger;
     private readonly IServiceProvider serviceProvider;
     private readonly IMemoryCache memoryCache;
+    private readonly ExternalMetadataGuard externalMetadataGuard;
 
     [GeneratedConstructor]
     public partial PromotionDeltaFactory(IServiceProvider serviceProvider);
 
-    public async ValueTask<ImmutableArray<AvatarPromotionDelta>> GetAsync(ICultivationMetadataContext context, UserAndUid userAndUid)
+    public async ValueTask<ValueResult<bool, ImmutableArray<AvatarPromotionDelta>>> GetAsync(ICultivationMetadataContext context, UserAndUid userAndUid)
     {
-        ImmutableArray<AvatarPromotionDelta> result = await memoryCache.GetOrCreateAsync($"{nameof(PromotionDeltaFactory)}.Cache", async entry =>
+        string cacheKey = $"{nameof(PromotionDeltaFactory)}.Cache";
+        PromotionDeltaBuildResult result = await memoryCache.GetOrCreateAsync<PromotionDeltaBuildResult>(cacheKey, async entry =>
         {
             ImmutableArray<CalculableAvatar> calculableAvatars;
             ImmutableArray<CalculableWeapon> calculableWeapons;
@@ -38,15 +41,26 @@ internal sealed partial class PromotionDeltaFactory
                 calculableWeapons = await calculateClient.GetAllWeaponsAsync(userAndUid).ConfigureAwait(false);
             }
 
+            if (!externalMetadataGuard.ValidateCalculableItems(context, calculableAvatars, calculableWeapons))
+            {
+                return new(false, []);
+            }
+
             ImmutableArray<ICultivationItemsAccess> cultivationItemsEntryList = Create(context, calculableAvatars, calculableWeapons).Sort(CultivationItemsAccessComparer.Shared);
 
             using (ValueStopwatch.MeasureExecution(logger))
             {
-                return ToPromotionDeltaArray(cultivationItemsEntryList);
+                return new(true, ToPromotionDeltaArray(cultivationItemsEntryList));
             }
         }).ConfigureAwait(false);
 
-        return result;
+        if (!result.IsValid)
+        {
+            memoryCache.Remove(cacheKey);
+            return new(false, []);
+        }
+
+        return new(true, result.Deltas);
     }
 
     private static ImmutableArray<ICultivationItemsAccess> Create(ICultivationMetadataContext context, ImmutableArray<CalculableAvatar> avatars, ImmutableArray<CalculableWeapon> weapons)
@@ -131,4 +145,6 @@ internal sealed partial class PromotionDeltaFactory
             };
         }
     }
+
+    private readonly record struct PromotionDeltaBuildResult(bool IsValid, ImmutableArray<AvatarPromotionDelta> Deltas);
 }

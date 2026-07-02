@@ -22,6 +22,7 @@ internal sealed partial class GachaLogHutaoCloudService : IGachaLogHutaoCloudSer
     private readonly HutaoUserOptions hutaoUserOptions;
     private readonly IMetadataService metadataService;
     private readonly IServiceProvider serviceProvider;
+    private readonly ExternalMetadataGuard externalMetadataGuard;
 
     [GeneratedConstructor]
     public partial GachaLogHutaoCloudService(IServiceProvider serviceProvider);
@@ -74,6 +75,17 @@ internal sealed partial class GachaLogHutaoCloudService : IGachaLogHutaoCloudSer
             {
                 return new(false, default);
             }
+        }
+
+        if (!await metadataService.InitializeAsync().ConfigureAwait(false))
+        {
+            return new(false, default);
+        }
+
+        GachaLogServiceMetadataContext context = await metadataService.GetContextAsync<GachaLogServiceMetadataContext>(token).ConfigureAwait(false);
+        if (!externalMetadataGuard.ValidateGachaLogItems(context, array))
+        {
+            return new(false, default);
         }
 
         if (archive is null)

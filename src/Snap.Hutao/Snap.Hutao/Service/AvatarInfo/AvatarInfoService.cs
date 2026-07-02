@@ -27,7 +27,7 @@ internal sealed partial class AvatarInfoService : IAvatarInfoService
         {
             case RefreshOptionKind.RequestFromHoyolabGameRecord:
                 {
-                    ImmutableArray<EntityAvatarInfo> list = await avatarInfoDbBulkOperation.UpdateDbAvatarInfosAsync(userAndUid, token).ConfigureAwait(false);
+                    ImmutableArray<EntityAvatarInfo> list = await avatarInfoDbBulkOperation.UpdateDbAvatarInfosAsync(context, userAndUid, token).ConfigureAwait(false);
                     Summary summary = await PrivateGetSummaryAsync(context, list, token).ConfigureAwait(false);
                     return summary;
                 }

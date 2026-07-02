@@ -959,6 +959,9 @@
   <data name="ServiceGachaLogHutaoCloudEndIdFetchFailed" xml:space="preserve">
     <value>获取云端祈愿记录失败</value>
   </data>
+  <data name="ServiceExternalMetadataIncomplete" xml:space="preserve">
+    <value>外部数据包含当前元数据无法识别的项目：{0}。本次数据已被拦截，请更新元数据后重试。</value>
+  </data>
   <data name="ServiceGachaLogUrlProviderAuthkeyRequestFailed" xml:space="preserve">
     <value>请求验证密钥失败</value>
   </data>

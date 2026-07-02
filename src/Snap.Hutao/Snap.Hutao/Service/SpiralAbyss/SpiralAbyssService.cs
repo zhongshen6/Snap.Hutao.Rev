@@ -3,6 +3,7 @@
 
 using Snap.Hutao.Core.DependencyInjection.Abstraction;
 using Snap.Hutao.Model.Entity;
+using Snap.Hutao.Service.Metadata;
 using Snap.Hutao.ViewModel.SpiralAbyss;
 using Snap.Hutao.ViewModel.User;
 using Snap.Hutao.Web.Hoyolab;
@@ -20,6 +21,7 @@ internal sealed partial class SpiralAbyssService : ISpiralAbyssService
     private readonly ISpiralAbyssRepository spiralAbyssRepository;
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly ITaskContext taskContext;
+    private readonly ExternalMetadataGuard externalMetadataGuard;
 
     private readonly ConcurrentDictionary<PlayerUid, ObservableCollection<SpiralAbyssView>> spiralAbyssCollectionCache = [];
     private readonly AsyncLock collectionLock = new();
@@ -84,6 +86,11 @@ internal sealed partial class SpiralAbyssService : ISpiralAbyssService
             .ConfigureAwait(false);
 
         if (!ResponseValidator.TryValidate(response, messenger, out Web.Hoyolab.Takumi.GameRecord.SpiralAbyss.SpiralAbyss? webSpiralAbyss))
+        {
+            return;
+        }
+
+        if (!externalMetadataGuard.ValidateSpiralAbyss(context, webSpiralAbyss))
         {
             return;
         }

@@ -3,6 +3,7 @@
 
 using Snap.Hutao.Core.DependencyInjection.Abstraction;
 using Snap.Hutao.Model.Entity;
+using Snap.Hutao.Service.Metadata;
 using Snap.Hutao.ViewModel.HardChallenge;
 using Snap.Hutao.ViewModel.User;
 using Snap.Hutao.Web.Hoyolab;
@@ -22,6 +23,7 @@ internal sealed partial class HardChallengeService : IHardChallengeService
     private readonly IHardChallengeRepository hardChallengeRepository;
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly ITaskContext taskContext;
+    private readonly ExternalMetadataGuard externalMetadataGuard;
 
     private readonly ConcurrentDictionary<PlayerUid, ObservableCollection<HardChallengeView>> hardChallengeCollectionCache = [];
     private readonly AsyncLock collectionLock = new();
@@ -67,6 +69,11 @@ internal sealed partial class HardChallengeService : IHardChallengeService
                 return [];
             }
 
+            if (!externalMetadataGuard.ValidateHardChallengePopularity(context, webHardChallengePopularity))
+            {
+                return [];
+            }
+
             return webHardChallengePopularity.AvatarList.SelectAsArray(AvatarView.Create, context);
         }
     }
@@ -94,6 +101,19 @@ internal sealed partial class HardChallengeService : IHardChallengeService
                 .ConfigureAwait(false);
 
             if (!ResponseValidator.TryValidate(response, scope.ServiceProvider, out webHardChallenge))
+            {
+                return;
+            }
+        }
+
+        foreach (HardChallengeData hardChallengeData in webHardChallenge.Data)
+        {
+            if (!hardChallengeData.SinglePlayer.HasData && !hardChallengeData.MultiPlayer.HasData)
+            {
+                continue;
+            }
+
+            if (!externalMetadataGuard.ValidateHardChallenge(context, hardChallengeData))
             {
                 return;
             }

@@ -5,6 +5,7 @@ using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Model.InterChange.Inventory;
 using Snap.Hutao.Model.Metadata.Item;
 using Snap.Hutao.Service.Cultivation;
+using Snap.Hutao.Service.Metadata;
 using Snap.Hutao.Service.Metadata.ContextAbstraction;
 using Snap.Hutao.Service.Notification;
 using Snap.Hutao.Service.User;
@@ -26,6 +27,8 @@ internal sealed partial class InventoryService : IInventoryService
     private readonly ICultivationRepository cultivationRepository;
     private readonly IUserService userService;
     private readonly IMessenger messenger;
+    private readonly ExternalMetadataGuard externalMetadataGuard;
+    private readonly IMetadataService metadataService;
 
     [GeneratedConstructor]
     public partial InventoryService(IServiceProvider serviceProvider);
@@ -84,7 +87,11 @@ internal sealed partial class InventoryService : IInventoryService
             return;
         }
 
-        ImmutableArray<AvatarPromotionDelta> deltas = await promotionDeltaFactory.GetAsync(context, userAndUid).ConfigureAwait(false);
+        (bool isValid, ImmutableArray<AvatarPromotionDelta> deltas) = await promotionDeltaFactory.GetAsync(context, userAndUid).ConfigureAwait(false);
+        if (!isValid)
+        {
+            return;
+        }
 
         BatchConsumption? batchConsumption;
         using (IServiceScope scope = serviceScopeFactory.CreateScope())
@@ -103,6 +110,11 @@ internal sealed partial class InventoryService : IInventoryService
 
         if (batchConsumption is { OverallConsume: { IsDefault: false } items })
         {
+            if (!externalMetadataGuard.ValidateInventoryItems(context, items))
+            {
+                return;
+            }
+
             static IEnumerable<InventoryItem> ToInventoryItems(ImmutableArray<Item> consumeItems, Guid projectId)
             {
                 static uint ToSafeCount(Item item)
@@ -141,6 +153,17 @@ internal sealed partial class InventoryService : IInventoryService
         if (await yaeService.GetInventoryAsync(viewModel).ConfigureAwait(false) is not { } uiif)
         {
             messenger.Send(InfoBarMessage.Warning(SH.ServiceYaeEmbeddedYaeErrorTitle, SH.ServiceInventoryRefreshByEmbeddedYaeErrorMessage));
+            return;
+        }
+
+        if (!await metadataService.InitializeAsync().ConfigureAwait(false))
+        {
+            return;
+        }
+
+        CultivationMetadataContext context = await metadataService.GetContextAsync<CultivationMetadataContext>().ConfigureAwait(false);
+        if (!externalMetadataGuard.ValidateUIIF(context, uiif))
+        {
             return;
         }
 
