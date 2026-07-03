@@ -3022,7 +3022,7 @@
     <value>重定向合成</value>
   </data>
   <data name="ViewPageLaunchGameIslandGamepadHotSwitchHeader" xml:space="preserve">
-    <value>输入方式自动切换</value>
+    <value>移除热切换界面限制</value>
   </data>
   <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
     <value>用于手柄和键盘操作的快捷切换，通过鼠标左键和手柄A键快捷切换两种输入方式。

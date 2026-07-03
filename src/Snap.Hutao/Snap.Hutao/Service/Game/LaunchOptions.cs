@@ -137,7 +137,7 @@ internal sealed partial class LaunchOptions : DbStoreOptions, IRestrictedGamePat
     public IObservableProperty<int> TargetFps { get => field ??= CreateProperty(SettingKeys.LaunchTargetFps, InitializeTargetFpsWithScreenFps).WithValueChangedCallback(OnTargetFpsChanged); }
 
     [field: MaybeNull]
-    public IObservableProperty<bool> GamepadHotSwitchEnabled { get => field ??= CreateProperty(SettingKeys.LaunchGamepadHotSwitchEnabled, false); }
+    public IObservableProperty<bool> OfficialInputSwitchInPagesEnabled { get => field ??= CreateProperty(SettingKeys.LaunchOfficialInputSwitchInPagesEnabled, false); }
 
     [field: MaybeNull]
     public IObservableProperty<bool> RemoveOpenTeamProgress { get => field ??= CreateProperty(SettingKeys.LaunchRemoveOpenTeamProgress, false); }

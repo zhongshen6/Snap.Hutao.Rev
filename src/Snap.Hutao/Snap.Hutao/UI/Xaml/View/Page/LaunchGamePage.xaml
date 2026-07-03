@@ -843,44 +843,16 @@
                                         OnContent="{shuxm:ResourceString Name=ViewPageLaunchGameDisableFogOn}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
-                                        x:Name="GamepadHotSwitchToggleSwitch"
+                                        x:Name="OfficialInputSwitchInPagesToggleSwitch"
                                         Grid.Row="6"
                                         Grid.Column="0"
-                                        IsOn="{Binding LaunchOptions.GamepadHotSwitchEnabled.Value, Mode=TwoWay}"
+                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchHeader}"
+                                        IsOn="{Binding LaunchOptions.OfficialInputSwitchInPagesEnabled.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip="">
                                         <mxi:Interaction.Behaviors>
                                             <shuxb:ToggleSwitchHeaderHitTestVisibleBehavior/>
                                         </mxi:Interaction.Behaviors>
-                                        <ToggleSwitch.Header>
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchHeader}"/>
-                                                <Button
-                                                    Padding="1,1,0.5,0.5"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Center">
-                                                    <mxi:Interaction.Behaviors>
-                                                        <mxi:EventTriggerBehavior EventName="Click">
-                                                            <mxi:EventTriggerBehavior.Actions>
-                                                                <shuxba:ShowTeachingTipAction TeachingTip="{x:Bind GamepadHotSwitchTeachingTip}"/>
-                                                            </mxi:EventTriggerBehavior.Actions>
-                                                        </mxi:EventTriggerBehavior>
-                                                    </mxi:Interaction.Behaviors>
-                                                    <FontIcon
-                                                        FontSize="12"
-                                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                                                        Glyph="&#xE946;"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </ToggleSwitch.Header>
                                     </ToggleSwitch>
-                                    <TeachingTip
-                                        x:Name="GamepadHotSwitchTeachingTip"
-                                        Title="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchHeader}"
-                                        Grid.Row="6"
-                                        Grid.Column="0"
-                                        IsLightDismissEnabled="True"
-                                        Subtitle="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchDescription}"
-                                        Target="{x:Bind GamepadHotSwitchToggleSwitch}"/>
                                     <ToggleSwitch
                                         x:Name="RedirectCombineEntryToggleSwitch"
                                         Grid.Row="3"
