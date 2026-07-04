@@ -140,6 +140,9 @@ internal sealed partial class LaunchOptions : DbStoreOptions, IRestrictedGamePat
     public IObservableProperty<bool> OfficialInputSwitchInPagesEnabled { get => field ??= CreateProperty(SettingKeys.LaunchOfficialInputSwitchInPagesEnabled, false); }
 
     [field: MaybeNull]
+    public IObservableProperty<bool> PressLoginStartWithGamepad { get => field ??= CreateProperty(SettingKeys.LaunchPressLoginStartWithGamepad, false); }
+
+    [field: MaybeNull]
     public IObservableProperty<bool> RemoveOpenTeamProgress { get => field ??= CreateProperty(SettingKeys.LaunchRemoveOpenTeamProgress, false); }
 
     [field: MaybeNull]

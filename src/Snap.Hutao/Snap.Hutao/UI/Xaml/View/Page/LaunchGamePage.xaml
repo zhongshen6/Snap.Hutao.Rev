@@ -854,6 +854,12 @@
                                         </mxi:Interaction.Behaviors>
                                     </ToggleSwitch>
                                     <ToggleSwitch
+                                        Grid.Row="6"
+                                        Grid.Column="1"
+                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandPressLoginStartWithGamepadHeader}"
+                                        IsOn="{Binding LaunchOptions.PressLoginStartWithGamepad.Value, Mode=TwoWay}"
+                                        ToolTipService.ToolTip=""/>
+                                    <ToggleSwitch
                                         x:Name="RedirectCombineEntryToggleSwitch"
                                         Grid.Row="3"
                                         Grid.Column="1"

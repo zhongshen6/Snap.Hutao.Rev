@@ -157,6 +157,7 @@ internal sealed class GameIslandInterop : IGameIslandInterop
         SetFlag(ref flags, 14, options.ResinListItemId220007Allowed.Value);
         SetFlag(ref flags, 15, options.HideUid.Value);
         SetFlag(ref flags, 16, options.OfficialInputSwitchInPagesEnabled.Value);
+        SetFlag(ref flags, 17, options.PressLoginStartWithGamepad.Value);
         return flags;
     }
 
