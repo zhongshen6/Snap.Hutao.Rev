@@ -3027,6 +3027,9 @@
   <data name="ViewPageLaunchGameIslandPressLoginStartWithGamepadHeader" xml:space="preserve">
     <value>手柄 A 键进入游戏</value>
   </data>
+  <data name="ViewPageLaunchGameIslandRemoveBlurAndUnderwaterOcclusionHeader" xml:space="preserve">
+    <value>移除角色虚化和水下遮挡</value>
+  </data>
   <data name="ViewPageLaunchGameIslandGamepadHotSwitchDescription" xml:space="preserve">
     <value>用于手柄和键盘操作的快捷切换，通过鼠标左键和手柄A键快捷切换两种输入方式。
 本功能在官方宣布原生支持前独立完成。由于官方方案将取代注入实现，本功能仅保留为研究与实现记录，请优先使用官方热切换功能。</value>

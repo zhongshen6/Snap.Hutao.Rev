@@ -122,6 +122,7 @@ internal static class SettingKeys
     public const string LaunchTargetFps                                  = "Snap::Hutao::Game::Island::FrameRate";
     public const string LaunchOfficialInputSwitchInPagesEnabled          = "Snap::Hutao::Game::Island::OfficialInputSwitchInPages::Enabled";
     public const string LaunchPressLoginStartWithGamepad                 = "Snap::Hutao::Game::Island::PressLoginStartWithGamepad";
+    public const string LaunchRemoveBlurAndUnderwaterOcclusion           = "Snap::Hutao::Game::Island::RemoveBlurAndUnderwaterOcclusion";
     public const string LaunchUsingTouchScreen                           = "Snap::Hutao::Game::Island::InputDevice::TouchScreen";
     public const string LaunchForceUsingTouchScreen                      = "Snap::Hutao::Game::Island::InputDevice::TouchScreen::ForceWhenIntegratedTouchPresent";
     public const string LaunchRemoveOpenTeamProgress                     = "Snap::Hutao::Game::Island::OpenTeamProgress::Remove";

@@ -860,6 +860,12 @@
                                         IsOn="{Binding LaunchOptions.PressLoginStartWithGamepad.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
+                                        Grid.Row="6"
+                                        Grid.Column="2"
+                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandRemoveBlurAndUnderwaterOcclusionHeader}"
+                                        IsOn="{Binding LaunchOptions.RemoveBlurAndUnderwaterOcclusion.Value, Mode=TwoWay}"
+                                        ToolTipService.ToolTip=""/>
+                                    <ToggleSwitch
                                         x:Name="RedirectCombineEntryToggleSwitch"
                                         Grid.Row="3"
                                         Grid.Column="1"

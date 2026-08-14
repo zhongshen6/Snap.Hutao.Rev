@@ -143,6 +143,9 @@ internal sealed partial class LaunchOptions : DbStoreOptions, IRestrictedGamePat
     public IObservableProperty<bool> PressLoginStartWithGamepad { get => field ??= CreateProperty(SettingKeys.LaunchPressLoginStartWithGamepad, false); }
 
     [field: MaybeNull]
+    public IObservableProperty<bool> RemoveBlurAndUnderwaterOcclusion { get => field ??= CreateProperty(SettingKeys.LaunchRemoveBlurAndUnderwaterOcclusion, false); }
+
+    [field: MaybeNull]
     public IObservableProperty<bool> RemoveOpenTeamProgress { get => field ??= CreateProperty(SettingKeys.LaunchRemoveOpenTeamProgress, false); }
 
     [field: MaybeNull]
