@@ -123,16 +123,13 @@ internal static class SettingKeys
     public const string LaunchOfficialInputSwitchInPagesEnabled          = "Snap::Hutao::Game::Island::OfficialInputSwitchInPages::Enabled";
     public const string LaunchPressLoginStartWithGamepad                 = "Snap::Hutao::Game::Island::PressLoginStartWithGamepad";
     public const string LaunchRemoveBlurAndUnderwaterOcclusion           = "Snap::Hutao::Game::Island::RemoveBlurAndUnderwaterOcclusion";
+    public const string LaunchGameplayPauseHotkeyEnabled                 = "Snap::Hutao::Game::Island::GameplayPauseHotkey::Enabled";
     public const string LaunchUsingTouchScreen                           = "Snap::Hutao::Game::Island::InputDevice::TouchScreen";
     public const string LaunchForceUsingTouchScreen                      = "Snap::Hutao::Game::Island::InputDevice::TouchScreen::ForceWhenIntegratedTouchPresent";
     public const string LaunchRemoveOpenTeamProgress                     = "Snap::Hutao::Game::Island::OpenTeamProgress::Remove";
     public const string LaunchHideQuestBanner                            = "Snap::Hutao::Game::Island::QuestBanner::Hide";
     public const string LaunchHideUid                                    = "Snap::Hutao::Game::Island::Uid::Hide";
-    public const string LaunchResinListItemId000106Allowed               = "Snap::Hutao::Game::Island::Reward::000106";
     public const string LaunchResinListItemId000201Allowed               = "Snap::Hutao::Game::Island::Reward::000201";
-    public const string LaunchResinListItemId107009Allowed               = "Snap::Hutao::Game::Island::Reward::107009";
-    public const string LaunchResinListItemId107012Allowed               = "Snap::Hutao::Game::Island::Reward::107012";
-    public const string LaunchResinListItemId220007Allowed               = "Snap::Hutao::Game::Island::Reward::220007";
     public const string LaunchRedirectCombineEntry                       = "Snap::Hutao::Game::Island::Synthesis::Redirect";
     public const string LaunchUsingOverlay                               = "Snap::Hutao::Game::Overlay";
     public const string LaunchOverlaySelectedCatalogId                   = "Snap::Hutao::Game::Overlay::CatalogId";

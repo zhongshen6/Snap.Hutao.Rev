@@ -150,15 +150,16 @@ internal sealed class GameIslandInterop : IGameIslandInterop
         SetFlag(ref flags, 7, options.DisableShowDamageText.Value);
         SetFlag(ref flags, 8, usingTouchScreen);
         SetFlag(ref flags, 9, options.RedirectCombineEntry.Value);
-        SetFlag(ref flags, 10, options.ResinListItemId000106Allowed.Value);
+        SetFlag(ref flags, 10, true);
         SetFlag(ref flags, 11, options.ResinListItemId000201Allowed.Value);
-        SetFlag(ref flags, 12, options.ResinListItemId107009Allowed.Value);
-        SetFlag(ref flags, 13, options.ResinListItemId107012Allowed.Value);
-        SetFlag(ref flags, 14, options.ResinListItemId220007Allowed.Value);
+        SetFlag(ref flags, 12, true);
+        SetFlag(ref flags, 13, true);
+        SetFlag(ref flags, 14, true);
         SetFlag(ref flags, 15, options.HideUid.Value);
         SetFlag(ref flags, 16, options.OfficialInputSwitchInPagesEnabled.Value);
         SetFlag(ref flags, 17, options.PressLoginStartWithGamepad.Value);
         SetFlag(ref flags, 18, options.RemoveBlurAndUnderwaterOcclusion.Value);
+        SetFlag(ref flags, 19, options.GameplayPauseHotkeyEnabled.Value);
         return flags;
     }
 

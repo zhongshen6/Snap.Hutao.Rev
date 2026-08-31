@@ -651,7 +651,6 @@
                                         <RowDefinition Height="auto"/>
                                         <RowDefinition Height="auto"/>
                                         <RowDefinition Height="auto"/>
-                                        <RowDefinition Height="auto"/>
                                     </Grid.RowDefinitions>
 
                                     <ToggleSwitch
@@ -844,8 +843,8 @@
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
                                         x:Name="OfficialInputSwitchInPagesToggleSwitch"
-                                        Grid.Row="6"
-                                        Grid.Column="0"
+                                        Grid.Row="4"
+                                        Grid.Column="2"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchHeader}"
                                         IsOn="{Binding LaunchOptions.OfficialInputSwitchInPagesEnabled.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip="">
@@ -854,16 +853,22 @@
                                         </mxi:Interaction.Behaviors>
                                     </ToggleSwitch>
                                     <ToggleSwitch
-                                        Grid.Row="6"
-                                        Grid.Column="1"
+                                        Grid.Row="5"
+                                        Grid.Column="0"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandPressLoginStartWithGamepadHeader}"
                                         IsOn="{Binding LaunchOptions.PressLoginStartWithGamepad.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
-                                        Grid.Row="6"
-                                        Grid.Column="2"
+                                        Grid.Row="5"
+                                        Grid.Column="1"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandRemoveBlurAndUnderwaterOcclusionHeader}"
                                         IsOn="{Binding LaunchOptions.RemoveBlurAndUnderwaterOcclusion.Value, Mode=TwoWay}"
+                                        ToolTipService.ToolTip=""/>
+                                    <ToggleSwitch
+                                        Grid.Row="5"
+                                        Grid.Column="2"
+                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGameplayPauseHotkeyHeader}"
+                                        IsOn="{Binding LaunchOptions.GameplayPauseHotkeyEnabled.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
                                         x:Name="RedirectCombineEntryToggleSwitch"
@@ -919,37 +924,12 @@
                                     <ToggleSwitch
                                         Grid.Row="4"
                                         Grid.Column="0"
-                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowOriginalResinHeader}"
-                                        IsOn="{Binding LaunchOptions.ResinListItemId000106Allowed.Value, Mode=TwoWay}"
-                                        ToolTipService.ToolTip=""/>
-                                    <ToggleSwitch
-                                        Grid.Row="4"
-                                        Grid.Column="1"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowPrimogemHeader}"
                                         IsOn="{Binding LaunchOptions.ResinListItemId000201Allowed.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
                                         Grid.Row="4"
-                                        Grid.Column="2"
-                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowFragileResinHeader}"
-                                        IsOn="{Binding LaunchOptions.ResinListItemId107009Allowed.Value, Mode=TwoWay}"
-                                        ToolTipService.ToolTip=""/>
-
-                                    <ToggleSwitch
-                                        Grid.Row="5"
-                                        Grid.Column="0"
-                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowTransientResinHeader}"
-                                        IsOn="{Binding LaunchOptions.ResinListItemId107012Allowed.Value, Mode=TwoWay}"
-                                        ToolTipService.ToolTip=""/>
-                                    <ToggleSwitch
-                                        Grid.Row="5"
                                         Grid.Column="1"
-                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandResinListItemAllowCondensedResinHeader}"
-                                        IsOn="{Binding LaunchOptions.ResinListItemId220007Allowed.Value, Mode=TwoWay}"
-                                        ToolTipService.ToolTip=""/>
-                                    <ToggleSwitch
-                                        Grid.Row="5"
-                                        Grid.Column="2"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandHideUidHeader}"
                                         IsOn="{Binding LaunchOptions.HideUid.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>

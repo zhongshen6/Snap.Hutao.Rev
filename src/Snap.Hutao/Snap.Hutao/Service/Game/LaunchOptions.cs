@@ -146,6 +146,9 @@ internal sealed partial class LaunchOptions : DbStoreOptions, IRestrictedGamePat
     public IObservableProperty<bool> RemoveBlurAndUnderwaterOcclusion { get => field ??= CreateProperty(SettingKeys.LaunchRemoveBlurAndUnderwaterOcclusion, false); }
 
     [field: MaybeNull]
+    public IObservableProperty<bool> GameplayPauseHotkeyEnabled { get => field ??= CreateProperty(SettingKeys.LaunchGameplayPauseHotkeyEnabled, false); }
+
+    [field: MaybeNull]
     public IObservableProperty<bool> RemoveOpenTeamProgress { get => field ??= CreateProperty(SettingKeys.LaunchRemoveOpenTeamProgress, false); }
 
     [field: MaybeNull]
@@ -167,20 +170,7 @@ internal sealed partial class LaunchOptions : DbStoreOptions, IRestrictedGamePat
     public IObservableProperty<bool> RedirectCombineEntry { get => field ??= CreateProperty(SettingKeys.LaunchRedirectCombineEntry, false); }
 
     [field: MaybeNull]
-    public IObservableProperty<bool> ResinListItemId000106Allowed { get => field ??= CreateProperty(SettingKeys.LaunchResinListItemId000106Allowed, true); }
-
-    [field: MaybeNull]
     public IObservableProperty<bool> ResinListItemId000201Allowed { get => field ??= CreateProperty(SettingKeys.LaunchResinListItemId000201Allowed, true); }
-
-    [field: MaybeNull]
-    public IObservableProperty<bool> ResinListItemId107009Allowed { get => field ??= CreateProperty(SettingKeys.LaunchResinListItemId107009Allowed, true); }
-
-    [field: MaybeNull]
-    public IObservableProperty<bool> ResinListItemId107012Allowed { get => field ??= CreateProperty(SettingKeys.LaunchResinListItemId107012Allowed, true); }
-
-
-    [field: MaybeNull]
-    public IObservableProperty<bool> ResinListItemId220007Allowed { get => field ??= CreateProperty(SettingKeys.LaunchResinListItemId220007Allowed, true); }
 
     [field: MaybeNull]
     public IObservableProperty<ImmutableArray<AspectRatio>> AspectRatios { get => field ??= CreatePropertyForStructUsingJson(SettingKeys.LaunchAspectRatios, ImmutableArray<AspectRatio>.Empty); }
