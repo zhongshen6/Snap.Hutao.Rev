@@ -842,31 +842,50 @@
                                         OnContent="{shuxm:ResourceString Name=ViewPageLaunchGameDisableFogOn}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
-                                        x:Name="OfficialInputSwitchInPagesToggleSwitch"
+                                        x:Name="GamepadEnhancementToggleSwitch"
                                         Grid.Row="4"
                                         Grid.Column="2"
-                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadHotSwitchHeader}"
-                                        IsOn="{Binding LaunchOptions.OfficialInputSwitchInPagesEnabled.Value, Mode=TwoWay}"
+                                        IsOn="{Binding LaunchOptions.GamepadEnhancementEnabled.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip="">
                                         <mxi:Interaction.Behaviors>
                                             <shuxb:ToggleSwitchHeaderHitTestVisibleBehavior/>
                                         </mxi:Interaction.Behaviors>
+                                        <ToggleSwitch.Header>
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadEnhancementHeader}"/>
+                                                <Button Padding="1,1,0.5,0.5" VerticalAlignment="Center">
+                                                    <mxi:Interaction.Behaviors>
+                                                        <mxi:EventTriggerBehavior EventName="Click">
+                                                            <mxi:EventTriggerBehavior.Actions>
+                                                                <shuxba:ShowTeachingTipAction TeachingTip="{x:Bind GamepadEnhancementTeachingTip}"/>
+                                                            </mxi:EventTriggerBehavior.Actions>
+                                                        </mxi:EventTriggerBehavior>
+                                                    </mxi:Interaction.Behaviors>
+                                                    <FontIcon
+                                                        FontSize="12"
+                                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                                        Glyph="&#xE946;"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </ToggleSwitch.Header>
                                     </ToggleSwitch>
+                                    <TeachingTip
+                                        x:Name="GamepadEnhancementTeachingTip"
+                                        Title="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadEnhancementHeader}"
+                                        Grid.Row="4"
+                                        Grid.Column="2"
+                                        IsLightDismissEnabled="True"
+                                        Subtitle="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGamepadEnhancementTeachingTipSubtitle}"
+                                        Target="{x:Bind GamepadEnhancementToggleSwitch}"/>
                                     <ToggleSwitch
                                         Grid.Row="5"
                                         Grid.Column="0"
-                                        Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandPressLoginStartWithGamepadHeader}"
-                                        IsOn="{Binding LaunchOptions.PressLoginStartWithGamepad.Value, Mode=TwoWay}"
-                                        ToolTipService.ToolTip=""/>
-                                    <ToggleSwitch
-                                        Grid.Row="5"
-                                        Grid.Column="1"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandRemoveBlurAndUnderwaterOcclusionHeader}"
                                         IsOn="{Binding LaunchOptions.RemoveBlurAndUnderwaterOcclusion.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                     <ToggleSwitch
                                         Grid.Row="5"
-                                        Grid.Column="2"
+                                        Grid.Column="1"
                                         Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandGameplayPauseHotkeyHeader}"
                                         IsOn="{Binding LaunchOptions.GameplayPauseHotkeyEnabled.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
