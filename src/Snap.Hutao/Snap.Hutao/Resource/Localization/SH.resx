@@ -1014,6 +1014,24 @@
   <data name="ServiceGameEnsureGameResourceQueryResourceInformation" xml:space="preserve">
     <value>下载游戏资源索引</value>
   </data>
+  <data name="ServiceGameIslandWatchStart" xml:space="preserve">
+    <value>监听注入</value>
+  </data>
+  <data name="ServiceGameIslandWatchCancel" xml:space="preserve">
+    <value>取消监听</value>
+  </data>
+  <data name="ServiceGameIslandWatchWaiting" xml:space="preserve">
+    <value>监听进程已启动，请手动进入游戏</value>
+  </data>
+  <data name="ServiceGameIslandWatchRequiresAdmin" xml:space="preserve">
+    <value>请以管理员身份运行胡桃后使用监听注入</value>
+  </data>
+  <data name="ServiceGameIslandWatchInvalidConfiguration" xml:space="preserve">
+    <value>请先选择有效的游戏路径、开启注入并确认注入 DLL 存在</value>
+  </data>
+  <data name="ServiceGameIslandWatchBusy" xml:space="preserve">
+    <value>监听注入正在运行，请先取消监听或等待游戏退出</value>
+  </data>
   <data name="ServiceGameIslandFileSystemGetGameVersionFailed" xml:space="preserve">
     <value>获取本地游戏版本失败，无法获取注入配置信息</value>
   </data>

@@ -600,12 +600,24 @@
                                     Text="{shuxm:ResourceString Name=ViewPageLaunchGameInjectionDescription}"/>
                             </StackPanel>
 
-                            <ToggleSwitch
+                            <StackPanel
                                 Grid.Column="1"
-                                MinWidth="{ThemeResource SettingsCardContentControlMinWidth}"
-                                IsEnabled="{Binding LaunchOptions.IsIslandInjectionSwitchEnabled.Value}"
-                                IsOn="{Binding LaunchOptions.IsIslandEnabled.Value, Mode=TwoWay}"
-                                Style="{ThemeResource RightAlignedCompactToggleSwitchStyle}"/>
+                                Orientation="Horizontal"
+                                Spacing="16">
+                                <Button
+                                    VerticalAlignment="Center"
+                                    Command="{Binding ToggleIslandWatchCommand}"
+                                    Content="{Binding IslandWatch.ButtonText.Value}"
+                                    IsEnabled="{Binding IslandWatch.CanToggle.Value}"
+                                    ToolTipService.ToolTip="监听手动启动的游戏并注入功能。此模式不会应用启动参数等游戏启动设置。"/>
+                                <ContentControl IsEnabled="{Binding IslandWatch.IsActive.Value, Converter={StaticResource BoolNegationConverter}}">
+                                    <ToggleSwitch
+                                        MinWidth="{ThemeResource SettingsCardContentControlMinWidth}"
+                                        IsEnabled="{Binding LaunchOptions.IsIslandInjectionSwitchEnabled.Value}"
+                                        IsOn="{Binding LaunchOptions.IsIslandEnabled.Value, Mode=TwoWay}"
+                                        Style="{ThemeResource RightAlignedCompactToggleSwitchStyle}"/>
+                                </ContentControl>
+                            </StackPanel>
                         </Grid>
                         <Border
                             Grid.Row="1"
@@ -618,18 +630,30 @@
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Text="{shuxm:ResourceString Name=ViewPageLaunchGameDangerousDescriptionHint}"/>
                         </Border>
-                        <Border
-                            Grid.Row="2"
-                            Background="{ThemeResource InfoBarSuccessSeverityBackgroundBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            BorderThickness="0,0,0,1"
-                            Visibility="{Binding IsIslandConnected.Value}">
-                            <TextBlock
-                                Margin="6"
-                                HorizontalAlignment="Center"
-                                Style="{ThemeResource CaptionTextBlockStyle}"
-                                Text="{shuxm:ResourceString Name=ViewPageLaunchGameIslandConnected}"/>
-                        </Border>
+                        <StackPanel Grid.Row="2">
+                            <Border
+                                Background="{ThemeResource InfoBarWarningSeverityBackgroundBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="0,0,0,1"
+                                Visibility="{Binding IslandWatch.IsWaiting.Value}">
+                                <TextBlock
+                                    Margin="6"
+                                    HorizontalAlignment="Center"
+                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                    Text="{shuxm:ResourceString Name=ServiceGameIslandWatchWaiting}"/>
+                            </Border>
+                            <Border
+                                Background="{ThemeResource InfoBarSuccessSeverityBackgroundBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="0,0,0,1"
+                                Visibility="{Binding IsIslandConnected.Value}">
+                                <TextBlock
+                                    Margin="6"
+                                    HorizontalAlignment="Center"
+                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                    Text="{shuxm:ResourceString Name=ViewPageLaunchGameIslandConnected}"/>
+                            </Border>
+                        </StackPanel>
                         <ScrollViewer Grid.Row="3">
                             <ContentControl
                                 HorizontalAlignment="Stretch"

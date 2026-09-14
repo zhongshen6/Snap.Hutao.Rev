@@ -5,6 +5,7 @@ using Snap.Hutao.Core.ExceptionService;
 using Snap.Hutao.Core.Logging;
 using Snap.Hutao.Factory.ContentDialog;
 using Snap.Hutao.Service.Game;
+using Snap.Hutao.Service.Game.Island;
 using Snap.Hutao.Service.Game.Configuration;
 using Snap.Hutao.Service.Game.FileSystem;
 using Snap.Hutao.Service.Game.Launching;
@@ -116,6 +117,11 @@ internal sealed partial class LaunchGameShared
 
     public async ValueTask ResumeLaunchExecutionAsync(IViewModelSupportLaunchExecution viewModel)
     {
+        if (serviceProvider.GetRequiredService<GameIslandWatchService>().IsActive.Value)
+        {
+            return;
+        }
+
         if (Interlocked.Exchange(ref resuming, true))
         {
             return;

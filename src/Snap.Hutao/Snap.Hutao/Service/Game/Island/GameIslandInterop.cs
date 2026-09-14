@@ -51,10 +51,16 @@ internal sealed class GameIslandInterop : IGameIslandInterop
             : new(injectionReady.Task);
     }
 
-    public async ValueTask WaitForExitAsync(LaunchExecutionContext context, CancellationToken token = default)
+    public ValueTask WaitForExitAsync(LaunchExecutionContext context, CancellationToken token = default)
+    {
+        return WaitForExitAsync(context.Process, context.LaunchOptions, token);
+    }
+
+    public async ValueTask WaitForExitAsync(IProcess process, LaunchOptions options, CancellationToken token = default)
     {
         try
         {
+            islandPath ??= Path.Combine(AppContext.BaseDirectory, IslandLibraryName);
             MemoryMappedFile file;
             if (resume)
             {
@@ -77,7 +83,7 @@ internal sealed class GameIslandInterop : IGameIslandInterop
             using (MemoryMappedViewAccessor accessor = file.CreateViewAccessor())
             {
                 nint handle = accessor.SafeMemoryMappedViewHandle.DangerousGetHandle();
-                InitializeIslandEnvironment(handle, context.LaunchOptions);
+                InitializeIslandEnvironment(handle, options);
 
                 if (!resume)
                 {
@@ -87,7 +93,7 @@ internal sealed class GameIslandInterop : IGameIslandInterop
                         throw HutaoException.InvalidOperation($"Missing {IslandLibraryName}: {islandPath}");
                     }
 
-                    if (context.Process is FullTrustProcess fullTrustProcess)
+                    if (process is FullTrustProcess fullTrustProcess)
                     {
                         fullTrustProcess.LoadLibrary(FullTrustLoadLibraryRequest.Create("Island", islandPath));
                     }
@@ -95,7 +101,7 @@ internal sealed class GameIslandInterop : IGameIslandInterop
                     {
                         try
                         {
-                            DllInjectionUtilities.InjectUsingRemoteThread(islandPath, context.Process.Id);
+                            DllInjectionUtilities.InjectUsingRemoteThread(islandPath, process.Id);
                         }
                         catch (Exception ex)
                         {
@@ -110,7 +116,7 @@ internal sealed class GameIslandInterop : IGameIslandInterop
                 }
 
                 injectionReady.TrySetResult();
-                await PeriodicUpdateIslandEnvironmentAsync(context, handle, token).ConfigureAwait(false);
+                await PeriodicUpdateIslandEnvironmentAsync(process, options, handle, token).ConfigureAwait(false);
             }
         }
         catch (Exception ex)
@@ -199,17 +205,17 @@ internal sealed class GameIslandInterop : IGameIslandInterop
         return false;
     }
 
-    private async ValueTask PeriodicUpdateIslandEnvironmentAsync(LaunchExecutionContext context, nint handle, CancellationToken token)
+    private async ValueTask PeriodicUpdateIslandEnvironmentAsync(IProcess process, LaunchOptions options, nint handle, CancellationToken token)
     {
         using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(500));
         while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
         {
-            if (!context.Process.IsRunning)
+            if (!process.IsRunning)
             {
                 break;
             }
 
-            UpdateIslandEnvironment(handle, context.LaunchOptions);
+            UpdateIslandEnvironment(handle, options);
         }
     }
 }

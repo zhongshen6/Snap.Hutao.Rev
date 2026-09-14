@@ -10,6 +10,7 @@ using Snap.Hutao.Model;
 using Snap.Hutao.Model.Entity;
 using Snap.Hutao.Model.Intrinsic;
 using Snap.Hutao.Service.Game;
+using Snap.Hutao.Service.Game.Island;
 using Snap.Hutao.Service.Game.FileSystem;
 using Snap.Hutao.Service.Game.Locator;
 using Snap.Hutao.Service.Game.Package;
@@ -51,6 +52,14 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
 
     public partial LaunchOptions LaunchOptions { get; }
 
+    public partial GameIslandWatchService IslandWatch { get; }
+
+    [Command("ToggleIslandWatchCommand")]
+    private void ToggleIslandWatch()
+    {
+        IslandWatch.Toggle();
+    }
+
     public partial LaunchGameShared Shared { get; }
 
     public ImmutableArray<LaunchScheme> KnownSchemes { get; } = KnownLaunchSchemes.Values;
@@ -65,7 +74,7 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
 
     public IObservableProperty<NameValue<PlatformType>?> SelectedPlatformType { get => field ??= LaunchOptions.PlatformType.AsNameValue(LaunchOptions.PlatformTypes); }
 
-    public IObservableProperty<GamePathEntry?> GamePathEntry { get => field ??= LaunchOptions.GamePathEntry.SetWithCondition(static (value, unloaded) => !unloaded.Value && value is not null, IsViewUnloaded); }
+    public IObservableProperty<GamePathEntry?> GamePathEntry { get => field ??= LaunchOptions.GamePathEntry.SetWithCondition((value, unloaded) => !unloaded.Value && !IslandWatch.IsActive.Value && value is not null, IsViewUnloaded); }
 
     public IReadOnlyObservableProperty<string> DisplayGamePath { get => field ??= Property.Observe(LaunchOptions.GamePathEntry, static entry => SH.FormatViewModelLaunchGameDisplayGamePath(entry?.Path)); }
 
@@ -141,6 +150,12 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
     [Command("PickGamePathCommand")]
     private async Task PickGamePathAsync()
     {
+        if (IslandWatch.IsActive.Value)
+        {
+            messenger.Send(InfoBarMessage.Warning(SH.ServiceGameIslandWatchBusy));
+            return;
+        }
+
         SentrySdk.AddBreadcrumb(BreadcrumbFactory.CreateUI("Set game path by picker", "LaunchGameViewModel.Command"));
         if (await gameLocatorFactory.LocateSingleAsync(GameLocationSourceKind.Manual).ConfigureAwait(false) is not (true, var path))
         {
@@ -148,12 +163,23 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
         }
 
         await taskContext.SwitchToMainThreadAsync();
+        if (IslandWatch.IsActive.Value)
+        {
+            return;
+        }
+
         LaunchOptions.PerformGamePathEntrySynchronization(path);
     }
 
     [Command("ResetGamePathCommand")]
     private void ResetGamePath()
     {
+        if (IslandWatch.IsActive.Value)
+        {
+            messenger.Send(InfoBarMessage.Warning(SH.ServiceGameIslandWatchBusy));
+            return;
+        }
+
         SentrySdk.AddBreadcrumb(BreadcrumbFactory.CreateUI("Reset game path", "LaunchGameViewModel.Command"));
         LaunchOptions.GamePathEntry.Value = default;
         _ = 1;
@@ -162,6 +188,12 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
     [Command("RemoveGamePathEntryCommand")]
     private void RemoveGamePathEntry(GamePathEntry? entry)
     {
+        if (IslandWatch.IsActive.Value)
+        {
+            messenger.Send(InfoBarMessage.Warning(SH.ServiceGameIslandWatchBusy));
+            return;
+        }
+
         SentrySdk.AddBreadcrumb(BreadcrumbFactory.CreateUI("Remove game path", "LaunchGameViewModel.Command"));
         LaunchOptions.RemoveGamePathEntry(entry);
     }
