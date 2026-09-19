@@ -113,6 +113,9 @@ internal sealed partial class LaunchOptions : DbStoreOptions, IRestrictedGamePat
     public IObservableProperty<bool> IsIslandEnabled { get => field ??= CreateProperty(SettingKeys.LaunchIsIslandEnabled, false); }
 
     [field: MaybeNull]
+    public IObservableProperty<bool> UsingHoYoShade { get => field ??= CreateProperty(SettingKeys.LaunchUsingHoYoShade, false); }
+
+    [field: MaybeNull]
     public IObservableProperty<bool> IsIslandCapabilityAvailable { get => field ??= Property.CreateObservable(GameIslandInterop.IsIslandLibraryAvailable()); }
 
     [field: MaybeNull]

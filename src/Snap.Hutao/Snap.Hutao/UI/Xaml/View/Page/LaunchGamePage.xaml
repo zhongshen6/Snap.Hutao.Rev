@@ -655,7 +655,8 @@
                             </Border>
                         </StackPanel>
                         <ScrollViewer Grid.Row="3">
-                            <ContentControl
+                            <StackPanel Spacing="16">
+                                <ContentControl
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 IsEnabled="{Binding LaunchOptions.IsIslandEnabled.Value}">
@@ -977,7 +978,21 @@
                                         IsOn="{Binding LaunchOptions.HideUid.Value, Mode=TwoWay}"
                                         ToolTipService.ToolTip=""/>
                                 </Grid>
-                            </ContentControl>
+                                </ContentControl>
+                                <cwc:SettingsCard
+                                    Margin="16,0"
+                                    Description="{shuxm:ResourceString Name=ViewPageLaunchGameHoYoShadeDescription}"
+                                    Header="{shuxm:ResourceString Name=ViewPageLaunchGameHoYoShadeHeader}"
+                                    HeaderIcon="{shuxm:FontIcon Glyph=&#xE7F8;}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Command="{Binding ConfigureHoYoShadeCommand}" Content="{shuxm:ResourceString Name=ViewPageLaunchGameHoYoShadeConfigure}"/>
+                                        <ToggleSwitch
+                                            MinWidth="{ThemeResource SettingsCardContentControlMinWidth}"
+                                            IsEnabled="{Binding LaunchOptions.IsIslandEnabled.Value}"
+                                            IsOn="{Binding LaunchOptions.UsingHoYoShade.Value, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </cwc:SettingsCard>
+                            </StackPanel>
                         </ScrollViewer>
                     </Grid>
                     </Grid>

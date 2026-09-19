@@ -3033,6 +3033,75 @@
   <data name="ViewPageLaunchGameIslandOptionsHeader" xml:space="preserve">
     <value>注入选项</value>
   </data>
+  <data name="ViewPageLaunchGameHoYoShadeHeader" xml:space="preserve">
+    <value>HoYoShade</value>
+  </data>
+  <data name="ViewPageLaunchGameHoYoShadeDescription" xml:space="preserve">
+    <value>ReShade 图形效果与插件，需要开启注入后生效</value>
+  </data>
+  <data name="ViewPageLaunchGameHoYoShadeConfigure" xml:space="preserve">
+    <value>配置 HoYoShade</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationTitle" xml:space="preserve">
+    <value>HoYoShade 配置</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationOpenRuntimeDirectory" xml:space="preserve">
+    <value>打开运行时目录</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationResetConfiguration" xml:space="preserve">
+    <value>重置 HoYoShade 配置</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationConfirmReset" xml:space="preserve">
+    <value>确认重置配置</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationResetWarning" xml:space="preserve">
+    <value>再次点击确认重置配置会覆盖游戏目录中的 ReShade.ini。</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationResetSucceeded" xml:space="preserve">
+    <value>HoYoShade 配置已重置</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationInstallBaseShaderLibrary" xml:space="preserve">
+    <value>安装基础效果库</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationReinstallBaseShaderLibrary" xml:space="preserve">
+    <value>重装基础效果库</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationConfirmReinstall" xml:space="preserve">
+    <value>确认重装</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationNotInstalled" xml:space="preserve">
+    <value>尚未安装基础效果库。</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationInstalledLibrary" xml:space="preserve">
+    <value>已安装基础效果库。</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationReinstallWarning" xml:space="preserve">
+    <value>重装会完全替换基础效果库的 Shaders 和 Textures 目录，放入其中的其他效果也会被删除。Addons、Presets 和 HoYoShade 配置不会受影响。</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationDownloadingShaderLibrary" xml:space="preserve">
+    <value>正在下载基础效果库</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationValidatingArchive" xml:space="preserve">
+    <value>正在校验基础效果库</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationExtractingShaderLibrary" xml:space="preserve">
+    <value>正在安装基础效果库</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationRetryingShaderLibrary" xml:space="preserve">
+    <value>下载中断，正在重试</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationInstallSucceeded" xml:space="preserve">
+    <value>基础效果库已安装</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationReinstallSucceeded" xml:space="preserve">
+    <value>基础效果库已重装</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationInstallFailed" xml:space="preserve">
+    <value>基础效果库安装失败</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationGitHubRateLimited" xml:space="preserve">
+    <value>GitHub 请求过于频繁，请稍后再试</value>
+  </data>
   <data name="ViewPageLaunchGameIslandRedirectCombineEntryDescription" xml:space="preserve">
     <value>在物品详情中点击可合成数量时直接打开合成页面而不是地图</value>
   </data>

@@ -113,6 +113,7 @@ internal static class SettingKeys
     public const string LaunchUsingBetterGenshinImpactAutomation         = "Snap::Hutao::Game::InterProcess::BetterGenshinImpact::Automation";
     public const string LaunchDisableShowDamageText                      = "Snap::Hutao::Game::Island::DamageText::Show";
     public const string LaunchIsIslandEnabled                            = "Snap::Hutao::Game::Island::Enabled";
+    public const string LaunchUsingHoYoShade                             = "Snap::Hutao::Game::Island::HoYoShade::Enabled";
     public const string LaunchDisableEventCameraMove                     = "Snap::Hutao::Game::Island::Event::CameraMove::Disabled";
     public const string LaunchTargetFov                                  = "Snap::Hutao::Game::Island::FieldOfView";
     public const string LaunchIsSetFieldOfViewEnabled                    = "Snap::Hutao::Game::Island::FieldOfView::Enabled";

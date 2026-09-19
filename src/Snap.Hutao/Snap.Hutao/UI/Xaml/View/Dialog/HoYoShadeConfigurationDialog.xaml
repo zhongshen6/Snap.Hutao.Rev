@@ -1,0 +1,35 @@
+<ContentDialog
+    x:Class="Snap.Hutao.UI.Xaml.View.Dialog.HoYoShadeConfigurationDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:shuxm="using:Snap.Hutao.UI.Xaml.Markup"
+    Title="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationTitle}"
+    CloseButtonText="{shuxm:ResourceString Name=ContentDialogCancelCloseButtonText}"
+    Closing="OnClosing"
+    Style="{StaticResource DefaultContentDialogStyle}"
+    mc:Ignorable="d">
+
+    <StackPanel MinWidth="420" Spacing="12">
+        <TextBlock
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="{x:Bind StatusText, Mode=OneWay}"
+            TextWrapping="Wrap"
+            Visibility="{x:Bind IsConfirmationNotPending, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+        <TextBlock
+            Foreground="{ThemeResource SystemFillColorCautionBrush}"
+            Text="{x:Bind StatusText, Mode=OneWay}"
+            TextWrapping="Wrap"
+            Visibility="{x:Bind IsConfirmationPending, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Click="OnOpenRuntimeDirectoryClick" Content="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationOpenRuntimeDirectory}" IsEnabled="{x:Bind IsInstalling, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
+            <Button Click="OnResetConfigurationClick" Content="{x:Bind ResetButtonText, Mode=OneWay}" IsEnabled="{x:Bind IsInstalling, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
+            <Button Click="OnInstallClick" Content="{x:Bind InstallButtonText, Mode=OneWay}" IsEnabled="{x:Bind IsInstalling, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
+        </StackPanel>
+        <StackPanel Visibility="{x:Bind IsInstalling, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" Spacing="6">
+            <TextBlock Text="{x:Bind ProgressText, Mode=OneWay}"/>
+            <ProgressBar IsIndeterminate="{x:Bind IsProgressIndeterminate, Mode=OneWay}" Maximum="100" Value="{x:Bind ProgressValue, Mode=OneWay}"/>
+        </StackPanel>
+    </StackPanel>
+</ContentDialog>

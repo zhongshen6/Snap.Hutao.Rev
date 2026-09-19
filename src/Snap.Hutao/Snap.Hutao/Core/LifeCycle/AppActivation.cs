@@ -8,6 +8,7 @@ using Snap.Hutao.Core.LifeCycle.InterProcess;
 using Snap.Hutao.Core.Logging;
 using Snap.Hutao.Core.Setting;
 using Snap.Hutao.Factory.Process;
+using Snap.Hutao.Service.Game.Island;
 using Snap.Hutao.Service.Hutao;
 using Snap.Hutao.Service.Job;
 using Snap.Hutao.Service.Metadata;
@@ -195,6 +196,15 @@ internal sealed partial class AppActivation : IAppActivation, IAppActivationActi
 
     private async ValueTask UnsynchronizedHandleInitializationAsync()
     {
+        try
+        {
+            HoYoShadeRuntime.Initialize();
+        }
+        catch (Exception ex)
+        {
+            SentrySdk.CaptureException(ex);
+        }
+
         // Sentry IpAddress Traits, should always be configured
         using (IServiceScope scope = serviceProvider.CreateScope())
         {

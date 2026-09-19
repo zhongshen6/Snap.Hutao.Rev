@@ -93,25 +93,10 @@ internal sealed class GameIslandInterop : IGameIslandInterop
                         throw HutaoException.InvalidOperation($"Missing {IslandLibraryName}: {islandPath}");
                     }
 
-                    if (process is FullTrustProcess fullTrustProcess)
+                    InjectLibrary(process, "Island", islandPath);
+                    if (options.UsingHoYoShade.Value)
                     {
-                        fullTrustProcess.LoadLibrary(FullTrustLoadLibraryRequest.Create("Island", islandPath));
-                    }
-                    else
-                    {
-                        try
-                        {
-                            DllInjectionUtilities.InjectUsingRemoteThread(islandPath, process.Id);
-                        }
-                        catch (Exception ex)
-                        {
-                            SentrySdk.AddBreadcrumb(
-                                $"Island DLL injection failed: {ex.Message}",
-                                category: "island.injection",
-                                level: Sentry.BreadcrumbLevel.Error);
-
-                            throw HutaoException.Throw($"Island DLL injection failed: {ex.Message}", ex);
-                        }
+                        InjectLibrary(process, "HoYoShade", HoYoShadeRuntime.Prepare(options));
                     }
                 }
 
@@ -179,6 +164,29 @@ internal sealed class GameIslandInterop : IGameIslandInterop
         else
         {
             flags &= ~mask;
+        }
+    }
+
+    private static void InjectLibrary(IProcess process, string libraryName, string libraryPath)
+    {
+        if (process is FullTrustProcess fullTrustProcess)
+        {
+            fullTrustProcess.LoadLibrary(FullTrustLoadLibraryRequest.Create(libraryName, libraryPath));
+            return;
+        }
+
+        try
+        {
+            DllInjectionUtilities.InjectUsingRemoteThread(libraryPath, process.Id);
+        }
+        catch (Exception ex)
+        {
+            SentrySdk.AddBreadcrumb(
+                $"{libraryName} DLL injection failed: {ex.Message}",
+                category: "island.injection",
+                level: Sentry.BreadcrumbLevel.Error);
+
+            throw HutaoException.Throw($"{libraryName} DLL injection failed: {ex.Message}", ex);
         }
     }
 

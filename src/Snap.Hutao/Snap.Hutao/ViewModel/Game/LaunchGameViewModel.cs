@@ -38,6 +38,7 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
     private readonly IUserService userService;
     private readonly ITaskContext taskContext;
     private readonly IMessenger messenger;
+    private readonly IContentDialogFactory contentDialogFactory;
 
     [GeneratedConstructor]
     public partial LaunchGameViewModel(IServiceProvider serviceProvider);
@@ -58,6 +59,19 @@ internal sealed partial class LaunchGameViewModel : Abstraction.ViewModel, IView
     private void ToggleIslandWatch()
     {
         IslandWatch.Toggle();
+    }
+
+    [Command("ConfigureHoYoShadeCommand")]
+    private async Task ConfigureHoYoShadeAsync()
+    {
+        SentrySdk.AddBreadcrumb(BreadcrumbFactory.CreateUI("Configure HoYoShade", "LaunchGameViewModel.Command"));
+        using (IServiceScope scope = serviceProvider.CreateScope())
+        {
+            HoYoShadeConfigurationDialog dialog = await contentDialogFactory
+                .CreateInstanceAsync<HoYoShadeConfigurationDialog>(scope.ServiceProvider)
+                .ConfigureAwait(false);
+            await dialog.ShowConfigurationAsync().ConfigureAwait(false);
+        }
     }
 
     public partial LaunchGameShared Shared { get; }
