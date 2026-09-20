@@ -568,11 +568,16 @@
             </PivotItem>
 
             <PivotItem Header="{shuxm:ResourceString Name=ViewPageLaunchGameIslandOptionsHeader}">
-                <Border
-                    Margin="16"
-                    Padding="0"
-                    cw:Effects.Shadow="{ThemeResource CompatCardShadow}">
-                    <Grid>
+                <Grid Margin="16" RowSpacing="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+                    <Border
+                        Grid.Row="0"
+                        Padding="0"
+                        cw:Effects.Shadow="{ThemeResource CompatCardShadow}">
+                        <Grid>
                         <!-- 注入设置 -->
                         <Grid Style="{ThemeResource AcrylicGridCardStyle}">
                             <Grid.RowDefinitions>
@@ -604,12 +609,16 @@
                                 Grid.Column="1"
                                 Orientation="Horizontal"
                                 Spacing="16">
-                                <Button
-                                    VerticalAlignment="Center"
-                                    Command="{Binding ToggleIslandWatchCommand}"
-                                    Content="{Binding IslandWatch.ButtonText.Value}"
-                                    IsEnabled="{Binding IslandWatch.CanToggle.Value}"
-                                    ToolTipService.ToolTip="监听手动启动的游戏并注入功能。此模式不会应用启动参数等游戏启动设置。"/>
+                                <ContentControl IsEnabled="{Binding LaunchOptions.IsIslandEnabled.Value}">
+                                    <ContentControl IsEnabled="{Binding LaunchOptions.IsIslandInjectionSwitchEnabled.Value}">
+                                        <Button
+                                            VerticalAlignment="Center"
+                                            Command="{Binding ToggleIslandWatchCommand}"
+                                            Content="{Binding IslandWatch.ButtonText.Value}"
+                                            IsEnabled="{Binding IslandWatch.CanToggle.Value}"
+                                            ToolTipService.ToolTip="监听手动启动的游戏并注入功能。此模式不会应用启动参数等游戏启动设置。"/>
+                                    </ContentControl>
+                                </ContentControl>
                                 <ContentControl IsEnabled="{Binding IslandWatch.IsActive.Value, Converter={StaticResource BoolNegationConverter}}">
                                     <ToggleSwitch
                                         MinWidth="{ThemeResource SettingsCardContentControlMinWidth}"
@@ -979,24 +988,47 @@
                                         ToolTipService.ToolTip=""/>
                                 </Grid>
                                 </ContentControl>
-                                <cwc:SettingsCard
-                                    Margin="16,0"
-                                    Description="{shuxm:ResourceString Name=ViewPageLaunchGameHoYoShadeDescription}"
-                                    Header="{shuxm:ResourceString Name=ViewPageLaunchGameHoYoShadeHeader}"
-                                    HeaderIcon="{shuxm:FontIcon Glyph=&#xE7F8;}">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Button Command="{Binding ConfigureHoYoShadeCommand}" Content="{shuxm:ResourceString Name=ViewPageLaunchGameHoYoShadeConfigure}"/>
-                                        <ToggleSwitch
-                                            MinWidth="{ThemeResource SettingsCardContentControlMinWidth}"
-                                            IsEnabled="{Binding LaunchOptions.IsIslandEnabled.Value}"
-                                            IsOn="{Binding LaunchOptions.UsingHoYoShade.Value, Mode=TwoWay}"/>
-                                    </StackPanel>
-                                </cwc:SettingsCard>
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>
                     </Grid>
-                </Border>
+                    </Border>
+
+                    <Border Grid.Row="1" Padding="0" cw:Effects.Shadow="{ThemeResource CompatCardShadow}">
+                        <Grid Style="{ThemeResource AcrylicGridCardStyle}">
+                            <Grid
+                                Padding="16,8"
+                                Background="{ThemeResource LayerOnAcrylicFillColorDefaultBrush}"
+                                RowSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition Width="auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource BodyTextBlockStyle}" Text="{shuxm:ResourceString Name=ViewPageLaunchGameHoYoShadeHeader}"/>
+                                    <TextBlock
+                                        Style="{ThemeResource CaptionTextBlockStyle}"
+                                        Text="{shuxm:ResourceString Name=ViewPageLaunchGameHoYoShadeDescription}"/>
+                                </StackPanel>
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    Spacing="16">
+                                    <Button Command="{Binding ConfigureHoYoShadeCommand}" Content="{shuxm:ResourceString Name=ViewPageLaunchGameHoYoShadeConfigure}"/>
+                                    <ContentControl IsEnabled="{Binding IslandWatch.IsActive.Value, Converter={StaticResource BoolNegationConverter}}">
+                                        <ContentControl IsEnabled="{Binding LaunchOptions.IsIslandInjectionSwitchEnabled.Value}">
+                                            <ToggleSwitch
+                                                MinWidth="{ThemeResource SettingsCardContentControlMinWidth}"
+                                                IsEnabled="{Binding LaunchOptions.IsIslandEnabled.Value}"
+                                                IsOn="{Binding LaunchOptions.UsingHoYoShade.Value, Mode=TwoWay}"
+                                                Style="{ThemeResource RightAlignedCompactToggleSwitchStyle}"/>
+                                        </ContentControl>
+                                    </ContentControl>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
             </PivotItem>
         </Pivot>
     </shuxc:StandardView>
