@@ -4,32 +4,171 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sgi="using:Snap.Hutao.Service.Game.Island"
     xmlns:shuxm="using:Snap.Hutao.UI.Xaml.Markup"
     Title="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationTitle}"
     CloseButtonText="{shuxm:ResourceString Name=ContentDialogCancelCloseButtonText}"
     Closing="OnClosing"
+    HorizontalContentAlignment="Stretch"
     Style="{StaticResource DefaultContentDialogStyle}"
     mc:Ignorable="d">
 
-    <StackPanel MinWidth="420" Spacing="12">
-        <TextBlock
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-            Text="{x:Bind StatusText, Mode=OneWay}"
-            TextWrapping="Wrap"
-            Visibility="{x:Bind IsConfirmationNotPending, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
-        <TextBlock
-            Foreground="{ThemeResource SystemFillColorCautionBrush}"
-            Text="{x:Bind StatusText, Mode=OneWay}"
-            TextWrapping="Wrap"
-            Visibility="{x:Bind IsConfirmationPending, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
-        <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Click="OnOpenRuntimeDirectoryClick" Content="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationOpenRuntimeDirectory}" IsEnabled="{x:Bind IsInstalling, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
-            <Button Click="OnResetConfigurationClick" Content="{x:Bind ResetButtonText, Mode=OneWay}" IsEnabled="{x:Bind IsInstalling, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
-            <Button Click="OnInstallClick" Content="{x:Bind InstallButtonText, Mode=OneWay}" IsEnabled="{x:Bind IsInstalling, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
+    <ContentDialog.Resources>
+        <x:Double x:Key="ContentDialogMinWidth">548</x:Double>
+        <x:Double x:Key="ContentDialogMaxWidth">548</x:Double>
+    </ContentDialog.Resources>
+
+    <Grid RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <ContentControl HorizontalContentAlignment="Stretch">
+            <Grid>
+                <ScrollViewer
+                    MaxHeight="440"
+                    HorizontalContentAlignment="Stretch"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto"
+                    Visibility="{x:Bind IsPicker, Mode=OneWay, Converter={StaticResource BoolToVisibilityRevertConverter}}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationResources}"/>
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center" Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationBaseLibrary}" TextWrapping="Wrap"/>
+                            <Button Grid.Column="1" MinWidth="96" Click="OnInstallBaseClick" Content="{x:Bind BaseButtonText, Mode=OneWay}" IsEnabled="{x:Bind CanInstallBase, Mode=OneWay}"/>
+                        </Grid>
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center" Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationFullLibrary}" TextWrapping="Wrap"/>
+                            <Button Grid.Column="1" MinWidth="96" Click="OnInstallFullClick" Content="{x:Bind FullButtonText, Mode=OneWay}" IsEnabled="{x:Bind CanInstallFull, Mode=OneWay}"/>
+                        </Grid>
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center" Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationCustomLibrary}" TextWrapping="Wrap"/>
+                            <Button Grid.Column="1" MinWidth="96" Click="OnSelectPackagesClick" Content="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationSelect}" IsEnabled="{x:Bind IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
+                        </Grid>
+                        <TextBlock Margin="0,12,0,0" Style="{StaticResource BodyStrongTextBlockStyle}" Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationSettings}"/>
+                        <Button HorizontalAlignment="Stretch" Click="OnOpenRuntimeDirectoryClick" Content="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationOpenRuntimeDirectory}" IsEnabled="{x:Bind IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
+                        <Button HorizontalAlignment="Stretch" Click="OnResetConfigurationClick" Content="{x:Bind ResetButtonText, Mode=OneWay}" IsEnabled="{x:Bind IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Grid
+                    Height="440"
+                    RowSpacing="12"
+                    Visibility="{x:Bind IsPicker, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Click="OnBackClick" IsEnabled="{x:Bind IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}" ToolTipService.ToolTip="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationBack}" AutomationProperties.Name="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationBack}">
+                            <SymbolIcon Symbol="Back"/>
+                        </Button>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationCustomLibrary}" TextWrapping="Wrap"/>
+                    </Grid>
+                    <TextBox x:Name="SearchBox" Grid.Row="1" IsEnabled="{x:Bind IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}" PlaceholderText="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationSearch}" TextChanged="OnSearchTextChanged"/>
+                    <Button
+                        Grid.Row="2"
+                        Click="OnRetryCatalogClick"
+                        IsEnabled="{x:Bind IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                        Content="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationRetryCatalog}"
+                        Visibility="{x:Bind HasCatalogError, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <TextBlock
+                        Grid.Row="2"
+                        Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationNoMatches}"
+                        TextWrapping="Wrap"
+                        Visibility="{x:Bind HasNoMatches, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <ScrollViewer
+                        Grid.Row="3"
+                        IsEnabled="{x:Bind IsBusy, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                        HorizontalContentAlignment="Stretch"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="8">
+                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationEffectPackages}"/>
+                            <ItemsControl ItemsSource="{x:Bind VisiblePackages}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="sgi:HoYoShadeEffectPackage">
+                                        <CheckBox
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Stretch"
+                                            IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                            IsEnabled="{x:Bind IsRequired, Converter={StaticResource BoolNegationConverter}}"
+                                            ToolTipService.ToolTip="{x:Bind PackageDescription}">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{x:Bind PackageName}" TextWrapping="Wrap"/>
+                                                <TextBlock
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                                    Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationRequiredPackage}"
+                                                    TextWrapping="Wrap"
+                                                    Visibility="{x:Bind IsRequired, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{shuxm:ResourceString Name=ViewDialogHoYoShadeConfigurationAddons}"/>
+                            <ItemsControl ItemsSource="{x:Bind VisibleAddons}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="sgi:HoYoShadeAddon">
+                                        <CheckBox
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Stretch"
+                                            IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                            ToolTipService.ToolTip="{x:Bind PackageDescription}">
+                                            <TextBlock Text="{x:Bind PackageName}" TextWrapping="Wrap"/>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <Grid Grid.Row="4" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" Text="{x:Bind SelectedCountText, Mode=OneWay}" TextWrapping="Wrap"/>
+                        <Button Grid.Column="1" MinWidth="110" Click="OnInstallSelectedClick" Content="{x:Bind SelectedButtonText, Mode=OneWay}" IsEnabled="{x:Bind CanInstallSelected, Mode=OneWay}"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </ContentControl>
+
+        <StackPanel Grid.Row="1" Spacing="8">
+            <TextBlock
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="{x:Bind StatusText, Mode=OneWay}"
+                TextWrapping="Wrap"
+                Visibility="{x:Bind IsConfirmationPending, Mode=OneWay, Converter={StaticResource BoolToVisibilityRevertConverter}}"/>
+            <TextBlock
+                Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                Text="{x:Bind StatusText, Mode=OneWay}"
+                TextWrapping="Wrap"
+                Visibility="{x:Bind IsConfirmationPending, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            <StackPanel Spacing="6" Visibility="{x:Bind IsBusy, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock Text="{x:Bind ProgressText, Mode=OneWay}" TextWrapping="Wrap"/>
+                <ProgressBar IsIndeterminate="{x:Bind IsProgressIndeterminate, Mode=OneWay}" Maximum="100" Value="{x:Bind ProgressValue, Mode=OneWay}"/>
+            </StackPanel>
         </StackPanel>
-        <StackPanel Visibility="{x:Bind IsInstalling, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" Spacing="6">
-            <TextBlock Text="{x:Bind ProgressText, Mode=OneWay}"/>
-            <ProgressBar IsIndeterminate="{x:Bind IsProgressIndeterminate, Mode=OneWay}" Maximum="100" Value="{x:Bind ProgressValue, Mode=OneWay}"/>
-        </StackPanel>
-    </StackPanel>
+    </Grid>
 </ContentDialog>

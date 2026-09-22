@@ -3045,6 +3045,87 @@
   <data name="ViewDialogHoYoShadeConfigurationTitle" xml:space="preserve">
     <value>HoYoShade 配置</value>
   </data>
+  <data name="ViewDialogHoYoShadeConfigurationResources" xml:space="preserve">
+    <value>资源安装</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationSettings" xml:space="preserve">
+    <value>配置</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationBaseLibrary" xml:space="preserve">
+    <value>基础效果库</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationFullLibrary" xml:space="preserve">
+    <value>完整效果库、插件和预设</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationCustomLibrary" xml:space="preserve">
+    <value>自选效果库和插件</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationInstall" xml:space="preserve">
+    <value>安装</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationSelect" xml:space="preserve">
+    <value>选择</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationConfirmInstall" xml:space="preserve">
+    <value>确认安装</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationInstallSelected" xml:space="preserve">
+    <value>安装所选</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationBack" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationSearch" xml:space="preserve">
+    <value>搜索名称或作者</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationSelectedCount" xml:space="preserve">
+    <value>已选 {0} 项</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationEffectPackages" xml:space="preserve">
+    <value>效果库</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationAddons" xml:space="preserve">
+    <value>插件</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationRequiredPackage" xml:space="preserve">
+    <value>必选基础包</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationNoMatches" xml:space="preserve">
+    <value>没有匹配的效果库或插件</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationLoadingCatalog" xml:space="preserve">
+    <value>正在获取效果库和插件清单</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationCatalogFailed" xml:space="preserve">
+    <value>资源清单获取失败，请重试</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationRetryCatalog" xml:space="preserve">
+    <value>重试获取清单</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationDownloadingEffectPackage" xml:space="preserve">
+    <value>正在下载 {0}（{1}/{2}） {3}</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationExtractingEffectPackage" xml:space="preserve">
+    <value>正在解压 {0}（{1}/{2}） {3}</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationDownloadingAddon" xml:space="preserve">
+    <value>正在下载插件 {0}（{1}/{2}） {3}</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationExtractingAddon" xml:space="preserve">
+    <value>正在解压插件 {0}（{1}/{2}） {3}</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationDownloadingPresets" xml:space="preserve">
+    <value>正在下载预设（{0}/{1}） {2}</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationExtractingPresets" xml:space="preserve">
+    <value>正在解压预设（{0}/{1}） {2}</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationCommittingResources" xml:space="preserve">
+    <value>正在写入资源文件</value>
+  </data>
+  <data name="ViewDialogHoYoShadeConfigurationProgressUnknown" xml:space="preserve">
+    <value>处理中</value>
+  </data>
   <data name="ViewDialogHoYoShadeConfigurationOpenRuntimeDirectory" xml:space="preserve">
     <value>打开运行时目录</value>
   </data>
@@ -3055,49 +3136,25 @@
     <value>确认重置配置</value>
   </data>
   <data name="ViewDialogHoYoShadeConfigurationResetWarning" xml:space="preserve">
-    <value>再次点击确认重置配置会覆盖游戏目录中的 ReShade.ini。</value>
+    <value>重置会覆盖游戏目录中的 ReShade.ini。确认重置？</value>
   </data>
   <data name="ViewDialogHoYoShadeConfigurationResetSucceeded" xml:space="preserve">
     <value>HoYoShade 配置已重置</value>
   </data>
-  <data name="ViewDialogHoYoShadeConfigurationInstallBaseShaderLibrary" xml:space="preserve">
-    <value>安装基础效果库</value>
+  <data name="ViewDialogHoYoShadeConfigurationInstallWarning" xml:space="preserve">
+    <value>安装会覆盖所选效果库和插件的同路径文件，其他文件会保留。确认安装？</value>
   </data>
-  <data name="ViewDialogHoYoShadeConfigurationReinstallBaseShaderLibrary" xml:space="preserve">
-    <value>重装基础效果库</value>
-  </data>
-  <data name="ViewDialogHoYoShadeConfigurationConfirmReinstall" xml:space="preserve">
-    <value>确认重装</value>
-  </data>
-  <data name="ViewDialogHoYoShadeConfigurationNotInstalled" xml:space="preserve">
-    <value>尚未安装基础效果库。</value>
-  </data>
-  <data name="ViewDialogHoYoShadeConfigurationInstalledLibrary" xml:space="preserve">
-    <value>已安装基础效果库。</value>
-  </data>
-  <data name="ViewDialogHoYoShadeConfigurationReinstallWarning" xml:space="preserve">
-    <value>重装会完全替换基础效果库的 Shaders 和 Textures 目录，放入其中的其他效果也会被删除。Addons、Presets 和 HoYoShade 配置不会受影响。</value>
-  </data>
-  <data name="ViewDialogHoYoShadeConfigurationDownloadingShaderLibrary" xml:space="preserve">
-    <value>正在下载基础效果库</value>
-  </data>
-  <data name="ViewDialogHoYoShadeConfigurationValidatingArchive" xml:space="preserve">
-    <value>正在校验基础效果库</value>
-  </data>
-  <data name="ViewDialogHoYoShadeConfigurationExtractingShaderLibrary" xml:space="preserve">
-    <value>正在安装基础效果库</value>
+  <data name="ViewDialogHoYoShadeConfigurationFullInstallWarning" xml:space="preserve">
+    <value>安装会覆盖全部效果库、插件和预设的同路径文件，包括已修改的预设。其他文件会保留，不会切换当前预设。确认安装？</value>
   </data>
   <data name="ViewDialogHoYoShadeConfigurationRetryingShaderLibrary" xml:space="preserve">
     <value>下载中断，正在重试</value>
   </data>
-  <data name="ViewDialogHoYoShadeConfigurationInstallSucceeded" xml:space="preserve">
-    <value>基础效果库已安装</value>
+  <data name="ViewDialogHoYoShadeConfigurationResourcesInstalled" xml:space="preserve">
+    <value>HoYoShade 资源已安装</value>
   </data>
-  <data name="ViewDialogHoYoShadeConfigurationReinstallSucceeded" xml:space="preserve">
-    <value>基础效果库已重装</value>
-  </data>
-  <data name="ViewDialogHoYoShadeConfigurationInstallFailed" xml:space="preserve">
-    <value>基础效果库安装失败</value>
+  <data name="ViewDialogHoYoShadeConfigurationResourcesInstallFailed" xml:space="preserve">
+    <value>HoYoShade 资源安装失败</value>
   </data>
   <data name="ViewDialogHoYoShadeConfigurationGitHubRateLimited" xml:space="preserve">
     <value>GitHub 请求过于频繁，请稍后再试</value>
