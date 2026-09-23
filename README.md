@@ -105,6 +105,9 @@ Discord（可选）：https://discord.gg/ucH3mgeWpQ
 ## 📄 许可与致谢
 
 - 本仓库遵循 MIT License（详见 `LICENSE`）。
+- 本项目随发行包附带 HoYoShade 运行时组件，相关版权归哆啦D夢（DuolaD）所有，遵循 BSD 3-Clause License。
+- HoYoShade 运行时包含 ReShade 组件，相关版权归 Patrick Mours 所有，遵循 BSD 3-Clause License。
+- 第三方组件的完整许可证随发行包位于 `HoYoShade/LICENSE` 和 `HoYoShade/ReShade_LICENSE`。
 - 感谢 Snap Hutao 上游项目作者的开源贡献。
 - 感谢相关社区开发者在实现思路与兼容性验证上的帮助。
 
