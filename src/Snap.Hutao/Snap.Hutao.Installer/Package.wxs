@@ -1,5 +1,6 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
     <Package
         Name="Snap.Hutao.Rev"
         Manufacturer="Millennium Science Technology R-D Inst"
@@ -10,13 +11,26 @@
 
         <Property Id="ApplicationFolderName" Value="Snap.Hutao.Rev" />
         <Property Id="WixAppFolder" Value="WixPerMachineFolder" />
+        <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
 
         <MajorUpgrade
             AllowSameVersionUpgrades="yes"
+            Schedule="afterInstallExecute"
             DowngradeErrorMessage="!(loc.DowngradeError)" />
         <MediaTemplate EmbedCab="yes" />
 
         <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+
+        <util:CloseApplication Id="CloseSnapHutao"
+                               Target="Snap.Hutao.exe"
+                               CloseMessage="yes"
+                               ElevatedCloseMessage="yes"
+                               Timeout="5"
+                               TerminateProcess="1"
+                               RebootPrompt="no" />
+        <InstallExecuteSequence>
+            <Custom Action="override Wix4CloseApplications_$(sys.BUILDARCHSHORT)" Before="InstallFiles" Condition="VersionNT &gt; 400" />
+        </InstallExecuteSequence>
 
         <Feature Id="MainApp" Title="!(loc.MainAppTitle)" Level="1">
             <ComponentGroupRef Id="MainAppComponents" />
